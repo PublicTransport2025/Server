@@ -1,6 +1,7 @@
 # Confidencial params be warning
 .env
 .flask_secret
+.idea
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
