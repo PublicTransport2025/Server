@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>[3KA] Вход</title>
+</head>
+<body>
+<h1>Импорт/ Экспорт базы данных</h1>
+
+
+<table>
+    <tr>
+    <th>Импорт</th>
+    <th>Экспорт</th>
+    </tr>
+    <tr>
+        <td>
+            <form action='/web/io/upload/stops' method='post' enctype="multipart/form-data">
+                <label for="table">Таблица остановок</label>
+                <input type="file" id="table" name="table" accept="text/csv" value="Выбрать">
+                <input type="submit" value="Загрузить">
+            </form>
+        </td>
+        <td>
+            <a href="/web/io/download/stops">Скачать таблицу остановок</a>
+        </td>
+    </tr>
+</table>
+
+
+</body>
+</html>

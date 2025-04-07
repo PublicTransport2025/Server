@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>[3KA] Вход</title>
+    <link href="/static/login.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+    <h1>Удобный транспорт</h1>
+    <h1>Вход для администратора</h1>
+
+
+
+    <section>
+        <div class='label'>
+
+            <form>
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email">
+                <label for="password">Пароль</label>
+                <input type="password" id="password" name="password">
+                <input type="submit" value="Войти">
+            </form>
+
+            <div>
+  <script src="https://unpkg.com/@vkid/sdk@<3.0.0/dist-sdk/umd/index.js"></script>
+  <script type="text/javascript">
+    if ('VKIDSDK' in window) {
+      const VKID = window.VKIDSDK;
+
+      VKID.Config.init({
+        mode: VKID.ConfigAuthMode.Redirect,
+        app: {{ client_id }},
+        redirectUrl: '{{ redirect_uri }}',
+        codeChallenge: '{{ code_challenge }}',
+        state: '{{ state }}',
+        source: VKID.ConfigSource.LOWCODE,
+        scope: '',
+      });
+
+      const oneTap = new VKID.OneTap();
+
+      oneTap.render({
+        container: document.currentScript.parentElement,
+        fastAuthEnabled: false,
+        showAlternativeLogin: true,
+        styles: {
+          borderRadius: 50,
+          height: 50
+        }
+      })
+      .on(VKID.WidgetEvents.ERROR, vkidOnError)
+      .on(VKID.OneTapInternalEvents.LOGIN_SUCCESS, function (payload) {
+        const code = payload.code;
+        const deviceId = payload.device_id;
+
+        VKID.Auth.exchangeCode(code, deviceId)
+          .then(vkidOnSuccess)
+          .catch(vkidOnError);
+      });
+
+      function vkidOnSuccess(data) {
+        // Обработка полученного результата
+      }
+
+      function vkidOnError(error) {
+        // Обработка ошибки
+      }
+    }
+  </script>
+</div>
+
+
+
+            <p>Выполняя авторизацию, Вы соглашаетесь с<br><a href="https://github.com/PublicTransport2025/Docs/blob/main/%D0%94%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D1%8B%20%D0%B8%20%D1%81%D0%BE%D0%B3%D0%BB%D0%B0%D1%88%D0%B5%D0%BD%D0%B8%D1%8F/%D0%9F%D0%BE%D0%BB%D0%B8%D1%82%D0%B8%D0%BA%D0%B0%20%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B4%D0%B5%D0%BD%D1%86%D0%B8%D0%B0%D0%BB%D1%8C%D0%BD%D0%BE%D1%81%D1%82%D0%B8.pdf">Политикой конфиденциальности</a></p>
+        </div>
+
+</section>
+</body>
+</html>

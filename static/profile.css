@@ -1,0 +1,132 @@
+/*Заголовок страницы*/
+h1{
+    text-align: center;
+    font-size: 56px;
+    font-family: Georgia, sans-serif;
+    margin: 10px;
+    color: #000000;
+}
+
+/*Центральная секция*/
+section{
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    align-content: center;
+    justify-content: center;
+    overflow: auto;
+}
+
+/*Панель авторизации*/
+.label{
+    padding: 20px;
+    text-align: left;
+	width: 500px;
+    height: 400px;
+    margin: auto;
+    border-radius: 30px;
+    border-style: solid;
+    border-color: #377E70AA
+}
+
+/*Кнопка авторизации через ВК*/
+.vkbutton {
+    text-align: center;
+	width: 480px;
+    height: 50px;
+	margin: 10px auto;
+    background: #0077FF; /* Цвет фона */
+    font: 27px "VK Sans", sans-serif;
+    color: #fff; /* Цвет текста */
+    border-radius: 30px; /* Уголки */
+    display: flex;
+    align-items: center;
+   }
+
+/*Поля ввода*/
+input {
+	width: 440px;
+    height: 50px;
+    border-radius: 35px; /* Уголки */
+    border-style: solid;
+    border-color: #377E70;
+    padding: 0px 20px;
+    font-size: 27px;
+    margin: 10px auto;
+}
+
+/*Поля ввода*/
+label {
+	color: #377E70;
+    font-size: 27px;
+    text-align: left;
+    margin: 5px auto;
+}
+
+/*Кнопка входа*/
+input[type="submit"] {
+    width: 100%;
+    height: 50px;
+	margin: auto;
+    border-radius: 35px; /* Уголки */
+    background: #377E70;
+    color: #FFFFFF;
+    padding: 0px 20px;
+    font-size: 27px;
+    margin: 10px auto;
+    cursor: pointer;
+}
+
+/*Кнопка входа*/
+.lol {
+	margin: auto;
+}
+
+h5, ul{
+    color: #000000;
+    font-size: 25px;
+    margin: 5px;
+}
+
+li {
+    margin: 5px;
+}
+
+h2{
+font-size: 1.4em;
+width: 100%;
+font-family: Georgia, sans-serif;
+text-align: center;
+margin: 0.1em -0.35em 20px -0.35em;
+}
+h3{
+font-size: 23px;
+width: 100%;
+font-family: Georgia, sans-serif;
+text-align: center;
+margin: 0.1em -0.35em 0.1em -0.35em;
+}
+
+
+
+img {margin: 15px 0px 15px 30px;
+max-height:30px;
+float: left;
+}
+.button{
+text-decoration: none;
+}
+
+a:link {
+
+  color: #000000;
+}
+a:visited {
+
+  color: #000000;
+}
