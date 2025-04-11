@@ -1,3 +1,7 @@
+# Backups
+*.7z
+*.zip
+
 # Confidencial params be warning
 .env
 .flask_secret

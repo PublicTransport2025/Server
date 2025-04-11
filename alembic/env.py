@@ -8,7 +8,7 @@ from src.core.constants import DB_NAME, DB_HOST, DB_PORT, DB_USER, DB_PASS
 from src.core.db import Base
 
 from src.models.users import User
-from src.models.stops import Stop, Tpu
+from src.models.logistic import Stop, Tpu, Atp, Route, Section, Chart, Traffic, Timetable
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
