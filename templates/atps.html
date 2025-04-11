@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>[3KA] АТП</title>
+    <link href="/static/stops.css" rel="stylesheet" type="text/css">
+    <script>
+        async function updateAtp(button) {
+            const row = button.parentNode.parentNode;
+            const id = row.cells[0].textContent;
+            const title = row.cells[1].querySelector('input').value;
+            const numbers = row.cells[2].querySelector('input').value;
+            const about = row.cells[3].querySelector('textarea').value;
+            const phone = row.cells[4].querySelector('input').value;
+            const report = row.cells[5].querySelector('input').value;
+
+            data = {id, title, numbers, about, phone, report}
+            const jsonData = JSON.stringify(data);
+            console.log(jsonData);
+
+            try {
+                const response = await fetch('/web/atps', {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonData
+                });
+                const res_data = await response.json();
+                console.log(res_data)
+                if (!response.ok) {
+                    alert(res_data.message)
+                } else {
+                    alert("АТП обновлено");
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+
+        async function deleteAtp(button) {
+            const row = button.parentNode.parentNode;
+            const id = row.cells[0].textContent;
+
+            try {
+                const response = await fetch('/web/atps/'+id, {
+                    method: 'DELETE',
+                });
+                const res_data = await response.json();
+                console.log(res_data)
+                if (!response.ok) {
+                    alert(res_data.message)
+                } else {
+                    row.parentNode.removeChild(row);
+                    alert("АТП удалено");
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+
+        async function insertAtp(button) {
+            const row = button.parentNode.parentNode;
+
+            const title = row.cells[1].querySelector('input').value;
+            const numbers = row.cells[2].querySelector('input').value;
+            const about = row.cells[3].querySelector('textarea').value;
+            const phone = row.cells[4].querySelector('input').value;
+            const report = row.cells[5].querySelector('input').value;
+
+            data = {title, numbers, about, phone, report}
+            const jsonData = JSON.stringify(data);
+            console.log(jsonData);
+
+            try {
+                const response = await fetch('/web/atps', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonData
+                });
+                const res_data = await response.json();
+                console.log(res_data)
+                if (!response.ok) {
+                    alert(res_data.message)
+                } else {
+                    row.cells[1].querySelector('input').value = "";
+                    row.cells[2].querySelector('input').value = "";
+                    row.cells[3].querySelector('textarea').value = "";
+                    row.cells[4].querySelector('input').value = "";
+                    row.cells[5].querySelector('input').value = "";
+
+                    const newRow = row.cloneNode(true);
+                    newRow.cells[0].textContent = res_data.id;
+                    newRow.cells[1].querySelector('input').value = res_data.title;
+                    newRow.cells[2].querySelector('input').value = res_data.numbers;
+                    newRow.cells[3].querySelector('textarea').value = res_data.about;
+                    newRow.cells[4].querySelector('input').value = res_data.phone;
+                    newRow.cells[5].querySelector('input').value = res_data.report;
+
+                    row.parentNode.insertBefore(newRow, row.nextSibling);
+                    alert("АТП добавлено");
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    </script>
+</head>
+<body>
+<h1>Список АТП</h1>
+<a href="/web/profile">В личный кабинет</a>
+
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Название</th>
+        <th>Номера</th>
+        <th>Информация</th>
+        <th>Телефон</th>
+        <th>Почта</th>
+        <th> Действие</th>
+    </tr>
+    <tr>
+        <td>NEW</td>
+        <td><input type="text" name="title"/></td>
+        <td><input type="text" name="numbers"/></td>
+        <td><textarea name="about"></textarea></td>
+        <td><input type="text" name="phone"/></td>
+        <td><input type="text" name="report"/></td>
+        <td>
+            <button onclick="insertAtp(this)">Добавить</button>
+        </td>
+    </tr>
+    {% for atp in atps %}
+    <tr>
+        <td>{{atp['id']}}</td>
+        <td><input type="text" name="title" value="{{atp['title']}}"/></td>
+        <td><input type="text" name="numbers" value="{{atp['numbers']}}"/></td>
+        <td><textarea name="about">{{atp['about']}}</textarea></td>
+        <td><input type="text" name="phone" value="{{atp['phone']}}"/></td>
+        <td><input type="text" name="report" value="{{atp['report']}}"/></td>
+        <td>
+            <button onclick="updateAtp(this)">Обновить</button>
+            <button onclick="deleteAtp(this)">Удалить</button>
+        </td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+
+</body>
+</html>

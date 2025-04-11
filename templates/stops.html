@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>[3KA] Остановки</title>
+    <!--link href="/static/stops.css" rel="stylesheet" type="text/css"-->
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .map-block {
+            height: 45vh; /* Занимает половину высоты экрана */
+            background-color: yellow;
+        }
+        .header-container {
+            height: 10vh; /* Занимает оставшуюся половину высоты экрана */
+            overflow-y: hidden; /* Вертикальная прокрутка */
+        }
+        .table-container {
+            height: 45vh; /* Занимает оставшуюся половину высоты экрана */
+            overflow-y: auto; /* Вертикальная прокрутка */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        input{
+            width: 95%;
+        }
+    </style>
+    <script src="https://api-maps.yandex.ru/v3/?apikey={{map_key}}&lang=ru_RU"></script>
+    <script>
+        let map;
+        let ff;
+        let names;
+
+        let lat_new;
+        let lon_new;
+
+        initMap();
+
+
+        async function initMap() {
+            await ymaps3.ready;
+
+            const {YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer, YMapMarker, YMapListener} = ymaps3;
+
+            map = new YMap(document.getElementById('map'), {location: {center: [39.2, 51.68], zoom: 12}});
+
+            map.addChild(new YMapDefaultSchemeLayer());
+            ff = new YMapDefaultFeaturesLayer();
+            names = new YMapDefaultFeaturesLayer();
+            map.addChild(ff);
+
+            const clickCallback = (object, event) => {
+                const coords = event.coordinates;
+                addNewIcon(coords[0], coords[1]);
+                lat_new = coords[0];
+                lon_new = coords[1];
+            };
+
+            const mapListener = new YMapListener({
+                layer: 'any',
+                onClick: clickCallback,
+            });
+
+            map.addChild(mapListener);
+        }
+
+        function moveToCoordinates(button) {
+            const {YMapMarker, YMapDefaultFeaturesLayer} = ymaps3;
+            map.removeChild(ff);
+            ff = new YMapDefaultFeaturesLayer();
+            map.addChild(ff);
+
+            const row = button.parentNode.parentNode;
+            const lat = row.cells[4].querySelector('input').value;
+            const lon = row.cells[3].querySelector('input').value;
+
+            map.setLocation({
+                center: [lat, lon],
+                zoom: 18
+            });
+
+            const content = document.createElement('section');
+            const image = document.createElement('img');
+            image.src = '/static/stop.png';
+            content.appendChild(image);
+            const marker = new YMapMarker({coordinates: [lat, lon], draggable: false}, content);
+            map.addChild(marker);
+        }
+
+
+        function addNewIcon(lat, lon) {
+            const {YMapMarker, YMapDefaultFeaturesLayer} = ymaps3;
+
+            const content = document.createElement('section');
+            const image = document.createElement('img');
+            image.src = '/static/stop_new.png';
+            content.appendChild(image);
+            const marker = new YMapMarker({coordinates: [lat, lon], draggable: false}, content);
+            map.addChild(marker);
+        }
+
+
+        function writeNew(button) {
+            const row = button.parentNode.parentNode;
+            row.cells[4].querySelector('input').value = lat_new;
+            row.cells[3].querySelector('input').value = lon_new;
+            moveToCoordinates(button);
+        }
+
+
+        async function updateStop(button) {
+            const row = button.parentNode.parentNode;
+            const id = row.cells[0].textContent;
+            const name = row.cells[1].querySelector('input').value;
+            const about = row.cells[2].querySelector('input').value;
+            const lat = row.cells[3].querySelector('input').value;
+            const lon = row.cells[4].querySelector('input').value;
+            const stage = row.cells[5].querySelector('input').checked ? 1 : 0;
+            const tpu_id = row.cells[6].querySelector('input').value === '' ? null : row.cells[6].querySelector('input').value;
+
+            data = {id, name, about, lat, lon, stage, tpu_id}
+            const jsonData = JSON.stringify(data);
+            console.log(jsonData);
+
+            try {
+                const response = await fetch('/web/stops', {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonData
+                });
+                const res_data = await response.json();
+                console.log(res_data)
+                if (!response.ok) {
+                    alert(res_data.message)
+                } else {
+                    alert("ООТ обновлена");
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+
+        async function insertStop(button) {
+            const row = button.parentNode.parentNode;
+            const name = row.cells[1].querySelector('input').value;
+            const about = row.cells[2].querySelector('input').value;
+            const lat = row.cells[3].querySelector('input').value;
+            const lon = row.cells[4].querySelector('input').value;
+            const stage = row.cells[5].querySelector('input').checked ? 1 : 0;
+            const tpu_id = row.cells[6].querySelector('input').value === '' ? null : row.cells[6].querySelector('input').value;
+
+            data = {name, about, lat, lon, stage, tpu_id}
+            const jsonData = JSON.stringify(data);
+            console.log(jsonData);
+
+            try {
+                const response = await fetch('/web/stops', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonData
+                });
+                const res_data = await response.json();
+                console.log(res_data)
+                if (!response.ok) {
+                    alert(res_data.message)
+                } else {
+                    row.cells[1].querySelector('input').value = "";
+                    row.cells[2].querySelector('input').value = "";
+                    row.cells[3].querySelector('input').value = "";
+                    row.cells[4].querySelector('input').value = "";
+                    row.cells[5].querySelector('input').checked = false;
+                    row.cells[6].querySelector('input').value = "";
+
+                    const newRow = row.cloneNode(true);
+                    newRow.cells[0].textContent = res_data.id;
+                    newRow.cells[1].querySelector('input').value = res_data.name;
+                    newRow.cells[2].querySelector('input').value = res_data.about;
+                    newRow.cells[3].querySelector('input').value = res_data.lat;
+                    newRow.cells[4].querySelector('input').value = res_data.lon;
+                    newRow.cells[5].querySelector('input').checked = res_data.stage;
+                    newRow.cells[6].querySelector('input').value = res_data.tpu_id;
+                    row.parentNode.insertBefore(newRow, row.nextSibling);
+                    alert("ООТ добавлена");
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    </script>
+</head>
+<body>
+<div class="header-container">
+    <h1>Редактор остановочных пунктов</h1>
+    <a href="/web/profile">В личный кабинет</a>
+</div>
+
+<div class="map-block">
+    <div id="map" style="width: 100%; height: 100%"></div>
+</div>
+<div class="table-container">
+    <table id="stops_table">
+        <tr>
+            <th>ID</th>
+            <th>Название</th>
+            <th>Направление</th>
+            <th>Широта</th>
+            <th>Долгота</th>
+            <th>Активна?</th>
+            <th>ТПУ</th>
+            <th>Действие</th>
+        </tr>
+        <tr>
+            <td>NEW</td>
+            <td><input type="text" name="name"></td>
+            <td><input type="text" name="about"></td>
+            <td><input type="number" name="lat"></td>
+            <td><input type="number" name="lon"></td>
+            <td><input name="stage" type="checkbox"></td>
+            <td><input type="number" name="tpu_id"></td>
+            <td>
+                <button onclick="moveToCoordinates(this)">Показать</button>
+                <button onclick="writeNew(this)">Записать</button>
+                <button onclick="insertStop(this)">Добавить</button>
+        </tr>
+        {% for stop in stops %}
+        <tr>
+            <td>{{stop['id']}}</td>
+            <td><input type="text" name="name" value="{{stop['name']}}"></td>
+            <td><input type="text" name="about" value="{{stop['about']}}"></td>
+            <td><input type="number" name="lat" value="{{stop['lat']}}"></td>
+            <td><input type="number" name="lon" value="{{stop['lon']}}"></td>
+            <td><input name="stage" type="checkbox" {% if stop['stage'] %}checked{% endif %}></td>
+            <td><input type="number" name="tpu_id" value="{{stop['tpu_id']}}"></td>
+            <td>
+                <button onclick="moveToCoordinates(this)">Показать</button>
+                <button onclick="writeNew(this)">Записать</button>
+                <button onclick="updateStop(this)">Обновить</button>
+        </tr>
+        {% endfor %}
+
+    </table>
+</div>
+
+</body>
+</html>

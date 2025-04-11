@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[3KA] Маршрут {{route.number}}</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Редактор маршрута</h1>
+<h1>Маршрут {{route.number}} «{{route.label}}»</h1>
+<h2>Направление: {{route.title}}</h2>
+<a href="/web/routes">К реестру маршрутов</a><a href="/web/profile">В личный кабинет</a>
+
+<table id="userTable">
+    <tr>
+        <th>Остановка</th>
+        <th>Коэффециент участка 1.0+</th>
+        <th>Загруженность участка [0-5]</th>
+        <th>Карта учатска</th>
+        <th>Действия</th>
+    </tr>
+    {% if not sections %}
+    <tr>
+        <td><select id="stop" name="stop">
+            {%for stop in stops %}
+            <option value="{{stop['id']}}">{{stop['name']}}</option>
+            {% endfor %}
+        </select></td>
+        <td><input type="number" name="coef" value="1.0"></td>
+        <td><input type="number" name="load" value="2"></td>
+        <td><select id="chart" name="chart">
+            {%for chart in charts %}
+            <option value="{{chart['id']}}">{{chart['label']}}</option>
+            {% endfor %}
+        </select></td>
+        <td>
+            <button onclick="addRow(this)">Добавить остановку</button>
+            <button onclick="removeRow(this)">Удалить остановку</button>
+        </td>
+    </tr>
+    {% endif %}
+    {%for section in sections %}
+    <tr>
+        <td><select id="stop" name="stop">
+            {%for stop in stops %}
+            {% if stop['id']==section['stop_id'] %}
+            <option value="{{stop['id']}}" selected='selected'>{{stop['name']}}</option>
+            {%else%}
+            <option value="{{stop['id']}}">{{stop['name']}}</option>
+            {%endif%}
+            {% endfor %}
+
+        </select></td>
+        <td><input type="number" name="coef" value="{{section['coef']}}"></td>
+        <td><input type="number" name="load" value="{{section['load']}}"></td>
+        <td><select id="chart" name="chart">
+            {%for chart in charts %}
+            <option value="{{chart['id']}}">{{chart['label']}}</option>
+            {% endfor %}
+        </select></td>
+        <td>
+            <button onclick="addRow(this)">Добавить остановку</button>
+            <button onclick="removeRow(this)">Удалить остановку</button>
+        </td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+<button onclick="submitData()">Отправить данные</button>
+
+<script>
+    function addRow(button) {
+        const row = button.parentNode.parentNode;
+        const newRow = row.cloneNode(true);
+        row.parentNode.insertBefore(newRow, row.nextSibling);
+    }
+
+    function removeRow(button) {
+        const row = button.parentNode.parentNode;
+        if (row.parentNode.rows.length > 2) {
+            row.parentNode.removeChild(row);
+        } else {
+            alert("Нельзя удалить последнюю строку!");
+        }
+    }
+
+    async function submitData() {
+        const table = document.getElementById('userTable');
+        const data = [];
+
+        for (let i = 1; i < table.rows.length; i++) {
+            const row = table.rows[i];
+            const stop_id = row.cells[0].querySelector('select').value;
+            const coef = row.cells[1].querySelector('input').value;
+            const load = row.cells[2].querySelector('input').value;
+            const chart_id = row.cells[3].querySelector('select').value;
+
+            if (stop_id) { // Добавляем только непустые строки
+                data.push({ stop_id, coef, load, chart_id });
+            }
+        }
+
+        const jsonData = JSON.stringify({'sections' : data});
+        console.log(jsonData);
+
+        try {
+            const response = await fetch('/web/routes/edit_route/{{id}}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: jsonData
+            });
+
+            const res_data = await response.json();
+            console.log(res_data);
+
+            if (!response.ok) {
+                alert(res_data.message);
+            } else {
+                alert("Маршрут обновлен");
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+</script>
+</body>
+</html>

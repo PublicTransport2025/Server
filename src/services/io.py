@@ -3,6 +3,7 @@ import io
 import pandas as pd
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 
@@ -21,8 +22,12 @@ class IOService:
         """
         try:
             df = pd.read_csv(io.StringIO(contents.decode('utf-8')), sep=';')
+            db_session.execute(text(f'TRUNCATE TABLE {source} RESTART IDENTITY CASCADE'))
+            db_session.commit()
             with db_session.connection() as conn:
-                df.to_sql(source, conn, if_exists="replace", method='multi', chunksize=1000, index=False)
+                df.to_sql(source, conn, if_exists="append", method='multi', chunksize=1000, index=False)
+                if source != 'sections':
+                    conn.execute(text(f"SELECT setval('{source}_seq', {len(df)});"))
                 conn.commit()
             return len(df)
         except Exception as exc:

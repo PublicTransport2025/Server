@@ -5,9 +5,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.db import db_async_client
-from src.models.stops import Stop
+from src.models.logistic import Stop
 from src.schemas.coord import Coord
-from src.schemas.stop import StopSchema
+from src.schemas.stop import StopModel
 from src.services.stops import StopService
 
 stops_router = APIRouter(
@@ -16,7 +16,7 @@ stops_router = APIRouter(
 )
 
 
-@stops_router.get("/", response_model=List[StopSchema])
+@stops_router.get("/", response_model=List[StopModel])
 async def get_all_stops(session: AsyncSession = db_async_client):
     """
     Передает список всех остановок города
@@ -26,7 +26,7 @@ async def get_all_stops(session: AsyncSession = db_async_client):
     return stops
 
 
-@stops_router.get("/nearest", response_model=StopSchema)
+@stops_router.get("/nearest", response_model=StopModel)
 async def get_nearest_stop(lat: float, lon: float):
     """
     Передает ближайшую остановку к заданным координатам
