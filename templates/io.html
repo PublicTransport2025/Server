@@ -2,27 +2,69 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>[3KA] Вход</title>
+    <title>[3KA] Импорт</title>
+    <link href="/static/io.css" rel="stylesheet" type="text/css">
 </head>
 <body>
 <h1>Импорт/ Экспорт базы данных</h1>
-
-
+<a href="/web/profile">В личный кабинет</a>
+<p style="color: red">Предупрждение: таблицы базы данных необходимо загружать по порядку сверху вниз. Перед обновлением одной из таблиц необходимо скачать все остальные, а затем повторно загрузить нижние (зависимые) таблицы</p>
 <table>
     <tr>
-    <th>Импорт</th>
-    <th>Экспорт</th>
+        <th>Импорт</th>
+        <th>Экспорт</th>
     </tr>
     <tr>
         <td>
             <form action='/web/io/upload/stops' method='post' enctype="multipart/form-data">
-                <label for="table">Таблица остановок</label>
-                <input type="file" id="table" name="table" accept="text/csv" value="Выбрать">
+                <label for="table">Таблица остановок</label><br>
+                <input type="file" id="table" name="table" accept="text/csv" value="Выбрать"><br>
                 <input type="submit" value="Загрузить">
             </form>
         </td>
         <td>
             <a href="/web/io/download/stops">Скачать таблицу остановок</a>
+        </td>
+    </tr>
+
+
+    <tr>
+        <td>
+            <form action='/web/io/upload/atps' method='post' enctype="multipart/form-data">
+                <label for="table">Таблица АТП</label><br>
+                <input type="file" id="table" name="table" accept="text/csv" value="Выбрать"><br>
+                <input type="submit" value="Загрузить">
+            </form>
+        </td>
+        <td>
+            <a href="/web/io/download/atps">Скачать таблицу АТП</a>
+        </td>
+    </tr>
+
+
+    <tr>
+        <td>
+            <form action='/web/io/upload/routes' method='post' enctype="multipart/form-data">
+                <label for="table">Таблица маршрутов</label><br>
+                <input type="file" id="table" name="table" accept="text/csv" value="Выбрать"><br>
+                <input type="submit" value="Загрузить">
+            </form>
+        </td>
+        <td>
+            <a href="/web/io/download/routes">Скачать таблицу маршрутов</a>
+        </td>
+    </tr>
+
+    <tr>
+        <td>
+            <form action='/web/io/upload/sections' method='post' enctype="multipart/form-data">
+                <label for="table">Таблица перегонов</label><br>
+                <input type="file" id="table" name="table" accept="text/csv" value="Выбрать"><br>
+                <input type="submit" value="Загрузить">
+            </form>
+        </td>
+        <td>
+            <a href="/web/io/download/sections">Скачать таблицу перегонов</a>
         </td>
     </tr>
 </table>

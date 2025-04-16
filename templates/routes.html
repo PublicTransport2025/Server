@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>[3KA] Маршруты</title>
+    <link href="/static/stops.css" rel="stylesheet" type="text/css">
+    <script>
+        async function updateRoute(button) {
+            const row = button.parentNode.parentNode;
+            const id = row.cells[0].textContent;
+            const number = row.cells[1].querySelector('input').value;
+            const label = row.cells[2].querySelector('input').value;
+            const title = row.cells[3].querySelector('textarea').value;
+            const info = row.cells[4].querySelector('textarea').value;
+            const stage = row.cells[5].querySelector('input').checked ? 1 : 0;
+            const care = row.cells[6].querySelector('input').checked;
+            const atp_id = row.cells[7].querySelector('input').value === '' ? null : row.cells[7].querySelector('input').value;
+
+            data = {id, number, label, title, info, stage, care, atp_id}
+            const jsonData = JSON.stringify(data);
+            console.log(jsonData);
+
+            try {
+                const response = await fetch('/web/routes', {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonData
+                });
+                const res_data = await response.json();
+                console.log(res_data)
+                if (!response.ok) {
+                    alert(res_data.message)
+                } else {
+                    alert("Маршрут обновлен");
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+        async function insertRoute(button) {
+            const row = button.parentNode.parentNode;
+
+            const number = row.cells[1].querySelector('input').value;
+            const label = row.cells[2].querySelector('input').value;
+            const title = row.cells[3].querySelector('textarea').value;
+            const info = row.cells[4].querySelector('textarea').value;
+            const stage = row.cells[5].querySelector('input').checked ? 1 : 0;
+            const care = row.cells[6].querySelector('input').checked;
+            const atp_id = row.cells[7].querySelector('input').value === '' ? null : row.cells[7].querySelector('input').value;
+
+            data = {number, label, title, info, stage, care, atp_id}
+            const jsonData = JSON.stringify(data);
+            console.log(jsonData);
+
+            try {
+                const response = await fetch('/web/routes', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonData
+                });
+                const res_data = await response.json();
+                console.log(res_data)
+                if (!response.ok) {
+                    alert(res_data.message)
+                } else {
+                    row.cells[1].querySelector('input').value = "";
+                    row.cells[2].querySelector('input').value = "";
+                    row.cells[3].querySelector('textarea').value = "";
+                    row.cells[4].querySelector('textarea').value = "";
+                    row.cells[5].querySelector('input').checked = false;
+                    row.cells[6].querySelector('input').checked = false;
+                    row.cells[7].querySelector('input').value = "";
+
+                    const newRow = row.cloneNode(true);
+                    newRow.cells[0].textContent = res_data.id;
+                    newRow.cells[1].querySelector('input').value = res_data.number;
+                    newRow.cells[2].querySelector('input').value = res_data.label;
+                    newRow.cells[3].querySelector('textarea').value = res_data.title;
+                    newRow.cells[4].querySelector('textarea').value = res_data.info;
+                    newRow.cells[5].querySelector('input').checked = res_data.stage;
+                    newRow.cells[6].querySelector('input').checked = res_data.care;
+                    newRow.cells[7].querySelector('input').value = res_data.atp_id;
+
+                    row.parentNode.insertBefore(newRow, row.nextSibling);
+                    alert("Маршрут сохранен");
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    </script>
+</head>
+<body>
+<h1>Реестр маршрутов</h1>
+<a href="/web/profile">В личный кабинет</a>
+
+<table>
+    <tr>
+        <th width="50px">ID</th>
+        <th width="50px">Номер</th>
+        <th>Метка</th>
+        <th>Направление</th>
+        <th>Информация</th>
+        <th width="50px">Работает</th>
+        <th width="50px">Доступн.</th>
+        <th width="80px">АТП</th>
+        <th> Действие</th>
+    </tr>
+    <tr>
+        <td width="50px">NEW</td>
+        <td width="80px"><input type="text" name="number"/></td>
+        <td><input type="text" name="label"/></td>
+        <td><textarea name="title"></textarea></td>
+        <td><textarea name="info"></textarea></td>
+        <td width="50px"><input name="stage" type="checkbox"></td>
+        <td width="50px"><input name="care" type="checkbox"></td>
+        <td width="80px"><input type="number" name="atp_id"/>
+        <td>
+            <button onclick="insertRoute(this)">Добавить</button>
+        </td>
+    </tr>
+    {% for route in routes %}
+    <tr>
+        <td width="50px">{{route['id']}}<input type="hidden" name="id" value="{{route['id']}}"/></td>
+        <td width="80px"><input type="text" name="number" value="{{route['number']}}"/></td>
+        <td><input type="text" name="label" value="{{route['label']}}"/></td>
+        <td><textarea name="title">{{route['title']}}</textarea></td>
+        <td><textarea name="info">{{route['info'] if route['info'] else ''}}</textarea></td>
+        <td width="50px"><input name="stage" type="checkbox" {% if route['stage'] %}checked{% endif %}></td>
+        <td width="50px"><input name="care" type="checkbox" {% if route['care'] %}checked{% endif %}></td>
+        <td width="80px"><input type="number" name="atp_id" value="{{route['atp_id'] if route['atp_id'] else ''}}"/>
+        <td>
+            <button onclick="updateRoute(this)">Обновить</button>
+            <a href="/web/routes/edit_route/{{route['id']}}">Маршрут</a>
+        </td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+
+</body>
+</html>

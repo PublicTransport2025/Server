@@ -13,10 +13,8 @@ from src.api import api_router
 from src.core.constants import LOCALHOST_IP, PORT
 from src.web import web_router
 
-
 localhost_ip = LOCALHOST_IP
 port = PORT
-
 
 secret_file_path = Path(".flask_secret")
 secret_key = None
@@ -35,7 +33,14 @@ app.add_middleware(SessionMiddleware, secret_key=secret_key)
 app.include_router(api_router)
 app.include_router(web_router)
 
-logging.basicConfig(level=logging.ERROR, filename="error_log.log", filemode="a")
+logging.basicConfig(
+    filename='errors.log',
+    level=logging.ERROR,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    filemode='a',
+    encoding='utf-8'
+)
+
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
