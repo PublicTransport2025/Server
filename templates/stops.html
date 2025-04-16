@@ -20,6 +20,7 @@
         .table-container {
             height: 45vh; /* Занимает оставшуюся половину высоты экрана */
             overflow-y: auto; /* Вертикальная прокрутка */
+            text-align: center;
         }
         table {
             width: 100%;
@@ -211,6 +212,7 @@
     <div id="map" style="width: 100%; height: 100%"></div>
 </div>
 <div class="table-container">
+    <form method="post" action="/web/stops/reset_tpu"><input type="submit" value="Распределить остановки по транспортно пересадочным узлам"></form>
     <table id="stops_table">
         <tr>
             <th>ID</th>

@@ -3,11 +3,12 @@ import traceback
 from typing import List, Type
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from geopy.distance import geodesic
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
-from src.models.logistic import Stop
+from src.models.logistic import Stop, Tpu
 from src.schemas.coord import Coord
 from src.schemas.stop import StopModel, StopUpd, StopInput
 
@@ -85,6 +86,40 @@ class StopService:
             db_session.add(stop)
             db_session.commit()
             return StopUpd(**stop.__dict__)
+        except Exception as exc:
+            msg = '\n'.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+            logging.error(msg)
+            raise HTTPException(500, str(exc))
+
+    @staticmethod
+    def reset_tpu(db_session: Session) -> None:
+        try:
+            stops = db_session.query(Stop).order_by(Stop.id).all()
+            for stop in stops:
+                stop.tpu_id = None
+            db_session.commit()
+
+            tpus = db_session.query(Tpu).order_by(Tpu.id).all()
+            for tpu in tpus:
+                db_session.delete(tpu)
+            db_session.commit()
+
+            #return
+
+            stops = db_session.query(Stop).order_by(Stop.id).all()
+            for i in range(len(stops)):
+                if stops[i].tpu is None:
+                    point1 = (stops[i].lat, stops[i].lon)
+                    tpu = Tpu(id=stops[i].id, name=stops[i].name+str(stops[i].id))
+                    stops[i].tpu = tpu
+                    for j in range(i + 1, len(stops)):
+                        if stops[j].tpu is None:
+                            point2 = (stops[j].lat, stops[j].lon)
+                            distance = geodesic(point1, point2).m
+                            if distance < 200:
+                                stops[j].tpu = tpu
+
+            db_session.commit()
         except Exception as exc:
             msg = '\n'.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
             logging.error(msg)
