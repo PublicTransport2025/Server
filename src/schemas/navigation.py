@@ -10,6 +10,9 @@ class RouteSimple(BaseModel):
     number: str
     long: str
     load: int
+    time_label: str
+    time_begin: str
+    time_road: str
     stops: List[Coord]
 
 

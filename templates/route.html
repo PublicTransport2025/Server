@@ -69,7 +69,11 @@
         <td><input type="number" name="load" value="{{section['load']}}"></td>
         <td><select id="chart" name="chart">
             {%for chart in charts %}
+            {% if chart['id']==section['chart_id'] %}
+            <option value="{{chart['id']}}"  selected='selected'>{{chart['label']}}</option>
+            {%else%}
             <option value="{{chart['id']}}">{{chart['label']}}</option>
+            {%endif%}
             {% endfor %}
         </select></td>
         <td>
