@@ -67,6 +67,19 @@
             <a href="/web/io/download/sections">Скачать таблицу перегонов</a>
         </td>
     </tr>
+
+        <tr>
+        <td>
+            <form action='/web/io/upload/timetables' method='post' enctype="multipart/form-data">
+                <label for="table">Таблица расписаний</label><br>
+                <input type="file" id="table" name="table" accept="text/csv" value="Выбрать"><br>
+                <input type="submit" value="Загрузить">
+            </form>
+        </td>
+        <td>
+            <a href="/web/io/download/timetables">Скачать таблицу расписаний</a>
+        </td>
+    </tr>
 </table>
 
 

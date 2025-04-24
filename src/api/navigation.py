@@ -1,6 +1,6 @@
-from typing import List
+from datetime import datetime
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.db import db_async_client
@@ -14,13 +14,19 @@ navigation_router = APIRouter(
 )
 
 
+def get_current_time() -> datetime:
+    return datetime.now()
+
+
 @navigation_router.get("/")
-async def create_routes(from_id: int, to_id: int, session: AsyncSession = db_async_client) -> RouteReport:
+async def create_routes(from_id: int, to_id: int, current_time: datetime = Depends(get_current_time),
+                        session: AsyncSession = db_async_client) -> RouteReport:
     """
 
     """
-    route_report = await NavigationService().create_routes(from_id, to_id, session)
+    route_report = await NavigationService().create_routes(from_id, to_id, current_time, session)
     return route_report
+
 
 @navigation_router.get("/bynumber", response_model=Route)
 async def analyze_route(route_id: int):
