@@ -1,8 +1,12 @@
 from typing import List
 
 from fastapi import APIRouter
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.db import db_async_client
+from src.schemas.navigation import RouteReport
 from src.schemas.route import Route
+from src.services.navigation import NavigationService
 
 navigation_router = APIRouter(
     prefix="/navigation",
@@ -10,13 +14,13 @@ navigation_router = APIRouter(
 )
 
 
-@navigation_router.get("/", response_model=List[Route])
-async def create_route(start_stop_id: int, end_stop_id: int):
+@navigation_router.get("/")
+async def create_routes(from_id: int, to_id: int, session: AsyncSession = db_async_client) -> RouteReport:
     """
-    Передает список построенных маршрутов из точки А в точку Б
-    :return:
+
     """
-    pass
+    route_report = await NavigationService().create_routes(from_id, to_id, session)
+    return route_report
 
 @navigation_router.get("/bynumber", response_model=Route)
 async def analyze_route(route_id: int):

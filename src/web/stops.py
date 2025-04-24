@@ -49,3 +49,15 @@ async def add_stop(request: Request, data: StopInput, db_session: Session = db_c
 
     stop = StopService().add_stop(data, db_session)
     return stop
+
+
+@stops_router.post('/reset_tpu')
+async def reset_tpu(request: Request, db_session: Session = db_client):
+    """
+    Распределение всех остановок по пересадочным узлам
+    """
+    if not request.session.keys().__contains__('id') or request.session['rang'] < 50:
+        return RedirectResponse("/web/profile/login")
+
+    StopService().reset_tpu(db_session)
+    return RedirectResponse("/web/stops", status_code=303)
