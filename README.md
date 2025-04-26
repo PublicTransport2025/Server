@@ -22,7 +22,7 @@ Python 3.12 - Основной язык разработки
 </td></tr><table>
 
 ## Установка и локальный запуск
-1. Загрузите проект на свой компьютер ```git glone https://github.com/PublicTransport2025/Server.git <папка> ```
+1. Загрузите проект на свой компьютер ```git clone https://github.com/PublicTransport2025/Server.git <папка> ```
 2. Перейдите в скаченную папку ```cd <папка> ```
 3. Установите виртуальную среду poetry и систему контроля версий базы данных ```pip install poetry alembic```
 4. Установите необхоимые python библиотеки ```poetry install --no-root```
@@ -51,7 +51,7 @@ MOBILE_REDIRECT_URI=vk1234://vk.com/blank.html
 
 ADMIN_VK=VKID администратора, который будет создан в БД (только цифры)
 ```
-7. Инициализируйте базу данных ```alembic upgrade head```
+7. Инициализируйте базу данных ```poetry run alembic upgrade head```
 8. Запустите проект через ```poetry run python -m src.main```
 9. Авторизируйтесь через ВК и импортируйте таблицы в базу данных
 10. Проверить функционал API можно по ссылке ```http://localhost/docs```

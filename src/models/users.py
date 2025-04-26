@@ -1,6 +1,9 @@
 import uuid
+from datetime import datetime
+from typing import List
 
-from sqlalchemy import Column, UUID, String, Integer
+from sqlalchemy import Column, UUID, String, Integer, Text, DateTime, ForeignKey, func
+from sqlalchemy.orm import Mapped, relationship
 
 from src.core.db import Base
 
@@ -17,3 +20,20 @@ class User(Base):
     vkid: str = Column(String, nullable=True)
     rang: int = Column(Integer, nullable=False, default=5)
 
+    logs: Mapped[List["Log"]] = relationship(back_populates="user")
+
+
+class Log(Base):
+    __tablename__ = "logs"
+
+    id: UUID = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    created_ip: str = Column(String(15), nullable=False)
+    created_at: datetime = Column(DateTime, default=datetime.now)
+
+    level: str = Column(Integer, nullable=False)
+    action: str = Column(String, nullable=False)
+    information: str = Column(Text, nullable=True)
+
+    user_id: Mapped[UUID] = Column(ForeignKey("users.id", ondelete="SET NULL"), nullable=False)
+    user: Mapped["User"] = relationship(back_populates="logs")

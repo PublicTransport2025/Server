@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>[3KA] Логи</title>
+    <link href="/static/stops.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<h1>Команда редакторов</h1>
+<a href="/web/profile">В личный кабинет</a><br>
+
+<table>
+    <tr>
+        <th>Имя</th>
+        <th>Страница ВК</th>
+        <th>Ранг</th>
+        <th>Действие</th>
+    </tr>
+    {% for admin in admins %}
+    <tr>
+        <td>{{admin.name}}</td>
+        <td><a href="https://vk.com/id{{admin.vkid}}">Клик</a></td>
+        <td>{{admin.rang}}</td>
+        <td>
+            <form method="post" action="/web/admins/reset"><input type="hidden" name="admin" value="{{admin.id}}"><input
+                    style="width: 45%" type="submit" value="Разжаловать"></form>
+            <form method="post" action="/web/admins/setup"><input type="hidden" name="admin" value="{{admin.id}}"><input
+                    style="width: 45%" type="submit" value="Назначить"></form>
+        </td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+<h3>Создать аккаунт нового сотрудника</h3>
+<form method="post" action="/web/admins/add">
+    <div style="width:500px">
+        <table width="500px">
+            <tr>
+                <td width="200px"><label>Имя [Должность]:</label></td>
+                <td width="300px"><input type="text" name="name" width="300px"></td>
+            </tr>
+            <tr>
+                <td width="200px"><label>VK ID (только цифры):</label></td>
+                <td width="300px"><input type="number" name="vkid" width="300px"></td>
+            </tr>
+            <tr>
+                <td width="200px"></td>
+                <td width="300px"><input style="width: 70%" type="submit" value="Подтвердить"></td>
+            </tr>
+        </table>
+    </div>
+</form>
+
+</body>
+</html>

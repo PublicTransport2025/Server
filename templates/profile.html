@@ -4,22 +4,67 @@
     <meta charset="UTF-8">
     <title>[3KA] Кабинет</title>
     <link href="/static/profile.css" rel="stylesheet" type="text/css">
+    <script>
+        async function patchName() {
+            const name_input = document.getElementById("name");
+            const name = name_input.value;
+            data = {name}
+            const jsonData = JSON.stringify(data);
+            console.log(jsonData);
+
+            try {
+                const response = await fetch('/web/profile', {
+                    method: 'PATCH',
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonData
+                });
+                const res_data = await response.json();
+                console.log(res_data)
+                if (!response.ok) {
+                    alert(res_data.message)
+                } else {
+                    alert("Ваше имя обновлено");
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    </script>
 </head>
 <body>
 <h1>Кабинет редактора</h1>
-<h1>Добро пожаловать, {{ name }}</h1>
-
-
+<h3>Добро пожаловать, {{ name }}</h3>
 <section>
     <div class='label'>
         <h5>Основные действия:</h5>
         <ul>
             <li><a href="/web/io">Импорт/ Экспорт базы данных</a></li>
+            <li><a href="/web/admins">Команда редакторов</a></li>
+            <li><a href="/web/logs/5">Действия редакции</a></li>
             <li><a href="/web/stops">Редактор остановочных пунктов</a></li>
             <li><a href="/web/atps">Список АТП</a></li>
             <li><a href="/web/routes">Реестр Маршрутов</a></li>
             <li><a href="/web/timetables/1">Постоянные графики</a></li>
         </ul>
+        <h5>Мой профиль:</h5>
+        <table width="100%">
+            <tr>
+                <td width="20%" style="text-align:center">
+                    <label for="name">Имя:</label>
+                </td>
+                <td width="80%" style="text-align:center"><input type="text" name="name" id="name" value="{{name}}"/></td>
+            </tr>
+        </table>
+        <table width="100%">
+            <tr>
+                <td width="50%">
+                    <button class="logout" onclick="patchName()">Изменить</button>
+                </td>
+                <td width="50%">
+                    <button class="logout" onclick="window.location.href='/web/profile/logout';">Выйти</button>
+            </tr>
+        </table>
+
 
     </div>
 </section>
