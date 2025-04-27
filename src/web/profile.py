@@ -21,6 +21,12 @@ profile_router = APIRouter(
 )
 templates = Jinja2Templates(directory="templates")
 
+def get_current_user(request: Request):
+    user_id = request.session.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authorized")
+    return user_id
+
 
 @profile_router.get("/login", response_class=HTMLResponse)
 async def login(request: Request):
@@ -84,13 +90,13 @@ async def auth(request: Request, code: str, state: str, device_id: str, db_sessi
 
 
 @profile_router.get('')
-async def profile(request: Request):
+async def profile(request: Request, user_id: str = Depends(get_current_user)):
     """
     Отображает страницу личного кабинета администратора
     :param request:
     :return:
     """
-    if not request.session.keys().__contains__('id') or request.session['rang'] < 50:
+    if not request.session.keys().__contains__('id') or request.session.get('rang', 0) < 50:
         return RedirectResponse("/web/profile/login")
     name = request.session['name']
     return templates.TemplateResponse("profile.html", {"request": request, "name": name})

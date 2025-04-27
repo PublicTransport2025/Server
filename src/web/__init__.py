@@ -9,6 +9,8 @@ from src.web.profile import profile_router
 from src.web.routes import routes_router
 from src.web.stops import stops_router
 from src.web.timetables import timetables_router
+from src.web.auth import auth_router
+from src.web.profile import profile_router
 
 web_router = APIRouter(prefix="/web")
 
@@ -21,7 +23,9 @@ all_routers = [
     timetables_router,
     charts_router,
     logs_router,
-    admins_router
+    admins_router,
+    auth_router,
+    profile_router
 ]
 
 for router in all_routers:

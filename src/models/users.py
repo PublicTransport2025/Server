@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import List
 
-from sqlalchemy import Column, UUID, String, Integer, Text, DateTime, ForeignKey, func
+from sqlalchemy import Column, UUID, String, Integer, Text, DateTime, ForeignKey, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, relationship
 
 from src.core.db import Base
@@ -10,7 +10,7 @@ from src.core.db import Base
 
 class User(Base):
     __tablename__ = "users"
-
+    __table_args__ = (UniqueConstraint('login'),)
     id: UUID = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: str = Column(String, nullable=False)
 
