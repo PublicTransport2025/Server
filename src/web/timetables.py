@@ -44,7 +44,7 @@ async def add_stop(request: Request, data: TimetableInput, db_session: Session =
     if not request.session.keys().__contains__('id') or request.session['rang'] < 50:
         return RedirectResponse("/web/profile/login")
 
-    timetable_model = TimetableService.add_timetable(data, db_session)
+    timetable_model = TimetableService.add_timetable(data, db_session, request.session['created_ip'], request.session['id'])
     return timetable_model
 
 
@@ -56,5 +56,5 @@ async def delete_atp(request: Request, id: int, db_session: Session = db_client)
     if not request.session.keys().__contains__('id') or request.session['rang'] < 50:
         return RedirectResponse("/web/profile/login", status_code=303)
 
-    TimetableService.delete_timetable(id, db_session)
+    TimetableService.delete_timetable(id, db_session, request.session['created_ip'], request.session['id'])
     return JSONResponse(content={"message": "График удален"}, status_code=200)

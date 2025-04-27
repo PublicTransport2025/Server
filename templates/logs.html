@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>[3KA] Логи</title>
+    <link href="/static/stops.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<h1>Действия редакции</h1>
+<a href="/web/profile">В личный кабинет</a><br>
+Уровень важности: <a href="/web/logs/0">Все</a>; <a href="/web/logs/5">Существенные</a>; <a href="/web/logs/10">Критические</a>
+
+<table>
+    <tr>
+        <th>Редактор</th>
+        <th>Страница ВК</th>
+        <th>Действие</th>
+        <th>Информация</th>
+        <th>IP</th>
+        <th>Время</th>
+    </tr>
+    {% for log in logs %}
+    <tr>
+        <td>{{log.name}}</td>
+        <td><a href="https://vk.com/id{{log.vkid}}">Клик</a></td>
+        <td>{{log.action}}</td>
+        <td>{{log.information}}</td>
+        <td>{{log.created_ip}}</td>
+        <td>{{log.created_at}}</td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+
+</body>
+</html>

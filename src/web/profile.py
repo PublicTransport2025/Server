@@ -7,11 +7,12 @@ from uuid import uuid4
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from starlette.responses import RedirectResponse
+from starlette.responses import RedirectResponse, JSONResponse
 
 from src.core.constants import WEB_CLIENT_ID, WEB_REDIRECT_URI
 from src.core.db import db_client
-from src.models.users import User
+from src.models.users import User, Log
+from src.schemas.user import NameUpd
 from src.utils.users import decode_vk_id
 
 profile_router = APIRouter(
@@ -66,7 +67,17 @@ async def auth(request: Request, code: str, state: str, device_id: str, db_sessi
     user = db_session.query(User).filter(User.vkid == vkid).filter(User.rang >= 50).one_or_none()
     if user is None:
         raise HTTPException(403, "Haven't permissions")
+
+    if request.headers.get("X-Forwarded-For"):
+        client_ip = request.headers["X-Forwarded-For"].split(",")[0]
+    else:
+        client_ip = request.client.host
+    request.session['created_ip'] = client_ip
     request.session['id'] = str(user.id)
+    log = Log(created_ip=request.session['created_ip'], level=0, action='Авторизовался через ВК',
+              user_id=request.session['id'])
+    db_session.add(log)
+    db_session.commit()
     request.session['name'] = user.name
     request.session['rang'] = user.rang
     return RedirectResponse("/web/profile")
@@ -83,3 +94,39 @@ async def profile(request: Request):
         return RedirectResponse("/web/profile/login")
     name = request.session['name']
     return templates.TemplateResponse("profile.html", {"request": request, "name": name})
+
+
+@profile_router.patch('')
+async def change_name(request: Request, data: NameUpd, db_session=db_client):
+    """
+    Обновляет имя редактора через WEB-интерфейс
+    :param request:
+    :param name:
+    :param db_session:
+    :return:
+    """
+    if not request.session.keys().__contains__('id') or request.session['rang'] < 50:
+        return RedirectResponse("/web/profile/login")
+
+    user = db_session.query(User).filter(User.id == request.session['id']).filter(User.rang >= 50).one_or_none()
+    user.name = data.name
+    request.session['name'] = data.name
+    log = Log(created_ip=request.session['created_ip'], level=0, action='Обновил имя', information=data.name,
+              user_id=request.session['id'])
+    db_session.add(log)
+    db_session.commit()
+
+    return JSONResponse(content={"message": "Ваше имя обновлено"}, status_code=200)
+
+
+@profile_router.get('/logout')
+async def change_name(request: Request,db_session=db_client):
+    """
+    Осуществляет выход из аккаунта редактора
+    """
+    if not request.session.keys().__contains__('id') or request.session['rang'] < 50:
+        return RedirectResponse("/web/profile/login")
+
+    request.session.clear()
+
+    return RedirectResponse("/web/profile/login")

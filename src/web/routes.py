@@ -35,7 +35,7 @@ async def add_route(request: Request, data: RouteInput, db_session: Session = db
     if not request.session.keys().__contains__('id') or request.session['rang'] < 50:
         return RedirectResponse("/web/profile/login")
 
-    route = RouteService().add_route(data, db_session)
+    route = RouteService().add_route(data, db_session, request.session['created_ip'], request.session['id'])
     return route
 
 
@@ -49,7 +49,7 @@ async def update_route(request: Request, data: RouteModel, db_session: Session =
     if not request.session.keys().__contains__('id') or request.session['rang'] < 50:
         return RedirectResponse("/web/profile/login")
 
-    RouteService().update_route(data, db_session)
+    RouteService().update_route(data, db_session, request.session['created_ip'], request.session['id'])
     return JSONResponse(content={"message": "Маршрут обновлен"}, status_code=200)
 
 
@@ -82,7 +82,7 @@ async def show_routes(request: Request, route_id: int, db_session: Session = db_
 
 
 @routes_router.post('/edit_route/{route_id}')
-async def show_routes(request: Request, route_id: int, data: SectionsInput, db_session: Session = db_client):
+async def edit_route(request: Request, route_id: int, data: SectionsInput, db_session: Session = db_client):
     """
     Отображает страницу реестра маршрутов
     :param request: запрос сессии
@@ -91,5 +91,5 @@ async def show_routes(request: Request, route_id: int, data: SectionsInput, db_s
     if not request.session.keys().__contains__('id') or request.session['rang'] < 50:
         return RedirectResponse("/web/profile/login")
 
-    RouteService().edit_route(route_id, data, db_session)
+    RouteService().edit_route(route_id, data, db_session, request.session['created_ip'], request.session['id'])
     return JSONResponse(content={"message": "Остановки маршрута сохранены"}, status_code=200)

@@ -34,7 +34,7 @@ async def update_atp(request: Request, data: AtpModel, db_session: Session = db_
     if not request.session.keys().__contains__('id') or request.session['rang'] < 50:
         return RedirectResponse("/web/profile/login")
 
-    AtpService().update_atp(data, db_session)
+    AtpService().update_atp(data, db_session, request.session['created_ip'], request.session['id'])
     return JSONResponse(content={"message": "АТП обновлено"}, status_code=200)
 
 
@@ -46,7 +46,7 @@ async def add_atp(request: Request, data: AtpInput, db_session: Session = db_cli
     if not request.session.keys().__contains__('id') or request.session['rang'] < 50:
         return RedirectResponse("/web/profile/login")
 
-    atp_model = AtpService().add_atp(data, db_session)
+    atp_model = AtpService().add_atp(data, db_session, request.session['created_ip'], request.session['id'])
     return atp_model
 
 
@@ -58,5 +58,5 @@ async def delete_atp(request: Request, id: int, db_session: Session = db_client)
     if not request.session.keys().__contains__('id') or request.session['rang'] < 50:
         return RedirectResponse("/web/profile/login", status_code=303)
 
-    AtpService.delete_atp(id, db_session)
+    AtpService.delete_atp(id, db_session, request.session['created_ip'], request.session['id'])
     return JSONResponse(content={"message": "АТП удалено"}, status_code=200)

@@ -4,11 +4,12 @@ from typing import List, Type
 
 from fastapi import HTTPException
 from geopy.distance import geodesic
-from sqlalchemy import select, text
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 from src.models.logistic import Stop, Tpu
+from src.models.users import Log
 from src.schemas.coord import Coord
 from src.schemas.stop import StopModel, StopUpd, StopInput
 
@@ -49,11 +50,13 @@ class StopService:
             raise HTTPException(500, str(exc))
 
     @staticmethod
-    def update_stop(data: StopUpd, db_session: Session) -> None:
+    def update_stop(data: StopUpd, db_session: Session, ip: str, user_id: str) -> None:
         """
         Обновляет модель ООТ в базе данных
         :param data: модель ООТ
         :param db_session: сессия БД
+        :param ip: айпи редактора
+        :paran user_id: айди редактора
         """
         try:
             stop = db_session.query(Stop).filter_by(id=data.id).first()
@@ -63,6 +66,12 @@ class StopService:
             stop.lon = data.lon
             stop.stage = data.stage
             stop.tpu_id = data.tpu_id
+            log = Log(created_ip=ip,
+                      level=5,
+                      action='Обновил ООТ',
+                      information=str(data),
+                      user_id=user_id)
+            db_session.add(log)
             db_session.commit()
         except Exception as exc:
             msg = '\n'.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
@@ -70,11 +79,13 @@ class StopService:
             raise HTTPException(500, str(exc))
 
     @staticmethod
-    def add_stop(data: StopInput, db_session: Session) -> StopUpd:
+    def add_stop(data: StopInput, db_session: Session, ip: str, user_id: str) -> StopUpd:
         """
         Добавляет модель ООТ в базу данных
         :param data: модель ООТ
         :param db_session: сессия БД
+        :param ip: айпи редактора
+        :paran user_id: айди редактора
         """
         try:
             stop = Stop(name=data.name,
@@ -83,6 +94,12 @@ class StopService:
                         lon=data.lon,
                         stage=data.stage,
                         tpu_id=data.tpu_id)
+            log = Log(created_ip=ip,
+                      level=5,
+                      action='Добавил ООТ',
+                      information=str(data),
+                      user_id=user_id)
+            db_session.add(log)
             db_session.add(stop)
             db_session.commit()
             return StopUpd(**stop.__dict__)
@@ -92,7 +109,14 @@ class StopService:
             raise HTTPException(500, str(exc))
 
     @staticmethod
-    def reset_tpu(db_session: Session) -> None:
+    def reset_tpu(db_session: Session, ip: str, user_id: str) -> None:
+        """
+        Перераспределяет остановки между ТПУ
+        :param db_session:
+        :param ip: айпи редактора
+        :param user_id: айди редактора
+        :return:
+        """
         try:
             stops = db_session.query(Stop).order_by(Stop.id).all()
             for stop in stops:
@@ -104,13 +128,12 @@ class StopService:
                 db_session.delete(tpu)
             db_session.commit()
 
-            #return
 
             stops = db_session.query(Stop).order_by(Stop.id).all()
             for i in range(len(stops)):
                 if stops[i].tpu is None:
                     point1 = (stops[i].lat, stops[i].lon)
-                    tpu = Tpu(id=stops[i].id, name=stops[i].name+str(stops[i].id))
+                    tpu = Tpu(id=stops[i].id, name=stops[i].name + str(stops[i].id))
                     stops[i].tpu = tpu
                     for j in range(i + 1, len(stops)):
                         if stops[j].tpu is None:
@@ -118,7 +141,11 @@ class StopService:
                             distance = geodesic(point1, point2).m
                             if distance < 200:
                                 stops[j].tpu = tpu
-
+            log = Log(created_ip=ip,
+                      level=5,
+                      action='Пересчитал ТПУ',
+                      user_id=user_id)
+            db_session.add(log)
             db_session.commit()
         except Exception as exc:
             msg = '\n'.join(traceback.format_exception(type(exc), exc, exc.__traceback__))

@@ -35,7 +35,7 @@ async def update_stop(request: Request, data: StopUpd, db_session: Session = db_
     if not request.session.keys().__contains__('id') or request.session['rang'] < 50:
         return RedirectResponse("/web/profile/login")
 
-    StopService().update_stop(data, db_session)
+    StopService().update_stop(data, db_session, request.session['created_ip'], request.session['id'])
     return JSONResponse(content={"message": "ООТ обновлена"}, status_code=200)
 
 
@@ -47,7 +47,7 @@ async def add_stop(request: Request, data: StopInput, db_session: Session = db_c
     if not request.session.keys().__contains__('id') or request.session['rang'] < 50:
         return RedirectResponse("/web/profile/login")
 
-    stop = StopService().add_stop(data, db_session)
+    stop = StopService().add_stop(data, db_session, request.session['created_ip'], request.session['id'])
     return stop
 
 
@@ -59,5 +59,5 @@ async def reset_tpu(request: Request, db_session: Session = db_client):
     if not request.session.keys().__contains__('id') or request.session['rang'] < 50:
         return RedirectResponse("/web/profile/login")
 
-    StopService().reset_tpu(db_session)
+    StopService().reset_tpu(db_session, request.session['created_ip'], request.session['id'])
     return RedirectResponse("/web/stops", status_code=303)

@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from src.models.logistic import Route, Section
+from src.models.users import Log
 from src.schemas.route import RouteModel, RouteInput, SectionsInput
 
 
@@ -26,11 +27,13 @@ class RouteService:
             raise HTTPException(500, str(exc))
 
     @staticmethod
-    def update_route(data: RouteModel, db_session: Session) -> None:
+    def update_route(data: RouteModel, db_session: Session, ip: str, user_id: str) -> None:
         """
         Обновляет модель маршрута в базе данных
         :param data: модель маршрута
         :param db_session: сессия БД
+        :param ip: айпи редактора
+        :param user_id: айди редактора
         """
         try:
             route = db_session.query(Route).filter_by(id=data.id).first()
@@ -41,6 +44,12 @@ class RouteService:
             route.stage = data.stage
             route.care = data.care
             route.atp_id = data.atp_id
+            log = Log(created_ip=ip,
+                      level=5,
+                      action='Обновил маршрут',
+                      information=str(data),
+                      user_id=user_id)
+            db_session.add(log)
             db_session.commit()
         except Exception as exc:
             msg = '\n'.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
@@ -48,11 +57,13 @@ class RouteService:
             raise HTTPException(500, str(exc))
 
     @staticmethod
-    def add_route(data: RouteInput, db_session: Session) -> RouteModel:
+    def add_route(data: RouteInput, db_session: Session, ip: str, user_id: str) -> RouteModel:
         """
         Добавляет модель маршрута в базу данных
         :param data: модель маршрута
         :param db_session: сессия БД
+        :param ip: айпи редактора
+        :param user_id: айди редактора
         """
         try:
             route = Route(number=data.number,
@@ -63,6 +74,12 @@ class RouteService:
                           care=data.care,
                           atp_id=data.atp_id
                           )
+            log = Log(created_ip=ip,
+                      level=5,
+                      action='Добавил маршрут',
+                      information=str(data),
+                      user_id=user_id)
+            db_session.add(log)
             db_session.add(route)
             db_session.commit()
             return RouteModel(**route.__dict__)
@@ -72,12 +89,14 @@ class RouteService:
             raise HTTPException(500, str(exc))
 
     @staticmethod
-    def edit_route(route_id: int, data: SectionsInput, db_session: Session) -> None:
+    def edit_route(route_id: int, data: SectionsInput, db_session: Session, ip: str, user_id: str) -> None:
         """
         Редактирует остановки маршрута
         :param route_id: айди маршрута
         :param data: информация о маршруте
         :param db_session: сессия БД
+        :param ip: айпи редактора
+        :param user_id: айди редактора
         :return:
         """
         try:
@@ -96,6 +115,12 @@ class RouteService:
                                                  load=sections[i].load,
                                                  chart_id=(sections[i].chart_id if sections[i].chart_id else None)))
             db_session.add_all(sections_to_input)
+            log = Log(created_ip=ip,
+                      level=3,
+                      action='Отредактировал маршрут',
+                      information=str(data),
+                      user_id=user_id)
+            db_session.add(log)
             db_session.commit()
         except Exception as exc:
             msg = '\n'.join(traceback.format_exception(type(exc), exc, exc.__traceback__))

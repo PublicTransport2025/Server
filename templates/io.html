@@ -8,12 +8,27 @@
 <body>
 <h1>Импорт/ Экспорт базы данных</h1>
 <a href="/web/profile">В личный кабинет</a>
-<p style="color: red">Предупрждение: таблицы базы данных необходимо загружать по порядку сверху вниз. Перед обновлением одной из таблиц необходимо скачать все остальные, а затем повторно загрузить нижние (зависимые) таблицы</p>
+<p style="color: red">Предупрждение: таблицы базы данных необходимо загружать по порядку сверху вниз. Перед обновлением
+    одной из таблиц необходимо скачать все остальные, а затем повторно загрузить нижние (зависимые) таблицы</p>
 <table>
     <tr>
         <th>Импорт</th>
         <th>Экспорт</th>
     </tr>
+
+    <tr>
+        <td>
+            <form action='/web/io/upload/tpus' method='post' enctype="multipart/form-data">
+                <label for="table">Таблица пересадочных узлов</label><br>
+                <input type="file" id="table" name="table" accept="text/csv" value="Выбрать"><br>
+                <input type="submit" value="Загрузить">
+            </form>
+        </td>
+        <td>
+            <a href="/web/io/download/tpus">Скачать таблицу пересадочных узлов</a>
+        </td>
+    </tr>
+
     <tr>
         <td>
             <form action='/web/io/upload/stops' method='post' enctype="multipart/form-data">
@@ -68,7 +83,7 @@
         </td>
     </tr>
 
-        <tr>
+    <tr>
         <td>
             <form action='/web/io/upload/timetables' method='post' enctype="multipart/form-data">
                 <label for="table">Таблица расписаний</label><br>

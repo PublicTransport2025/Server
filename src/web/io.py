@@ -39,7 +39,7 @@ async def upload_table(request: Request, source: str, table: UploadFile, db_sess
     if not request.session.keys().__contains__('id') or request.session['rang'] < 50:
         return RedirectResponse("/web/profile/login", status_code=303)
     contents = await table.read()
-    IOService.upload_table(contents, source, db_session)
+    IOService.upload_table(contents, source, db_session, request.session['created_ip'], request.session['id'])
     return RedirectResponse("/web/io", status_code=303)
 
 
@@ -54,5 +54,5 @@ async def download_table(request: Request, source: str, db_session: Session = db
     """
     if not request.session.keys().__contains__('id') or request.session['rang'] < 50:
         return RedirectResponse("/web/profile/login")
-    answer = IOService.download_table(source, db_session)
+    answer = IOService.download_table(source, db_session, request.session['created_ip'], request.session['id'])
     return answer
