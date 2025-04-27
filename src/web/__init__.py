@@ -2,7 +2,6 @@ from fastapi import APIRouter
 
 from src.web.admins import admins_router
 from src.web.atps import atps_router
-from src.web.charts import charts_router
 from src.web.io import io_router
 from src.web.logs import logs_router
 from src.web.profile import profile_router
@@ -19,7 +18,6 @@ all_routers = [
     routes_router,
     atps_router,
     timetables_router,
-    charts_router,
     logs_router,
     admins_router
 ]

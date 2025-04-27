@@ -15,7 +15,7 @@ templates = Jinja2Templates(directory="templates")
 
 
 @logs_router.get('/{level}')
-async def show_atps(request: Request, level: int, db_session: Session = db_client):
+async def show_logs(request: Request, level: int, db_session: Session = db_client):
     """
     Отображает страницу логов редакции
     """
