@@ -10,7 +10,7 @@ from src.services.routes import RouteService
 
 routes_router = APIRouter(
     prefix="/routes",
-    tags=["Редактор остановок"],
+    tags=["Редактор маршрутов"],
 )
 templates = Jinja2Templates(directory="templates")
 
@@ -54,7 +54,7 @@ async def update_route(request: Request, data: RouteModel, db_session: Session =
 
 
 @routes_router.get('/edit_route/{route_id}')
-async def show_routes(request: Request, route_id: int, db_session: Session = db_client):
+async def show_route(request: Request, route_id: int, db_session: Session = db_client):
     """
     Отображает страницу реестра маршрутов
     :param request: запрос сессии

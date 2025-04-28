@@ -37,7 +37,7 @@ async def show_timetables(request: Request, id: int, db_session: Session = db_cl
 
 
 @timetables_router.post('')
-async def add_stop(request: Request, data: TimetableInput, db_session: Session = db_client):
+async def add_timetable(request: Request, data: TimetableInput, db_session: Session = db_client):
     """
     Обрабатывает апрос создания нового графика
     """
@@ -49,7 +49,7 @@ async def add_stop(request: Request, data: TimetableInput, db_session: Session =
 
 
 @timetables_router.delete('/{id}')
-async def delete_atp(request: Request, id: int, db_session: Session = db_client):
+async def delete_timetable(request: Request, id: int, db_session: Session = db_client):
     """
     Обрабатывает запрос удаления графика из расписания
     """

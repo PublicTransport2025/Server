@@ -58,7 +58,7 @@ async def reset_admin(request: Request, db_session: Session = db_client):
 
 
 @admins_router.post('/setup')
-async def reset_admin(request: Request, db_session: Session = db_client):
+async def setup_admin(request: Request, db_session: Session = db_client):
     """
     Назначает ранг администратора
     """

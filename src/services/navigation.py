@@ -127,7 +127,7 @@ class NavigationService:
             if timetable_full is not None and vehicles_full is not None:
                 pass
 
-        print(routes_df)
+        #print(routes_df)
         routes_df = routes_df.sort_values(by='load')
 
         simple_routes = []
