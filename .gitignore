@@ -1,7 +1,7 @@
 errors.log
 *.save
 # Input files log
-io/*
+io/*.csv
 
 # Backups
 *.7z
