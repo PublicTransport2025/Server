@@ -1,3 +1,5 @@
+errors.log
+*.save
 # Input files log
 io/*
 
