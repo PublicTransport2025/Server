@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    ports:
+      - "8080:80"
+    environment:
+      - LOCALHOST=${LOCALHOST}
+      - PORT=${PORT}
+      - VERSION=${VERSION}
+      - API_KEY=${API_KEY}
+      - DB_NAME=${DB_NAME}
+      - DB_HOST=db
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - WEB_CLIENT_ID=${WEB_CLIENT_ID}
+      - WEB_CLIENT_SECRET=${WEB_CLIENT_SECRET}
+      - WEB_REDIRECT_URI=${WEB_REDIRECT_URI}
+      - MOBILE_CLIENT_ID=${MOBILE_CLIENT_ID}
+      - MOBILE_CLIENT_SECRET=${MOBILE_CLIENT_SECRET}
+      - MOBILE_REDIRECT_URI=${MOBILE_REDIRECT_URI}
+      - ADMIN_VK=${ADMIN_VK}
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

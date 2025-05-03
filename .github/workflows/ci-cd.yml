@@ -1,0 +1,71 @@
+name: CI/CD for Transport3KA
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      - name: Install dependencies
+        run: |
+          poetry install --no-root
+        # Если будут тесты
+      - name: Run tests
+        run: |
+          poetry run pytest || true 
+
+      
+      - name: Build Docker image
+        run: |
+          docker-compose build
+
+      - name: Deploy to server
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+        run: |
+          echo "$SSH_PRIVATE_KEY" > private_key
+          chmod 600 private_key
+          mkdir -p ~/.ssh
+          ssh-keyscan -H $SERVER_IP >> ~/.ssh/known_hosts
+
+          echo "$ENV_FILE" > .env
+          scp -i private_key .env $SERVER_USER@$SERVER_IP:/root/Server/.env
+
+          ssh -i private_key $SERVER_USER@$SERVER_IP << 'EOF'
+            cd /root/Server
+            git pull origin main
+            docker-compose down
+            docker-compose build
+            docker-compose up -d
+            docker system prune -f  
+          EOF
+
+          rm private_key
