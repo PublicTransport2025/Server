@@ -1,4 +1,6 @@
 import io
+import logging
+import traceback
 import uuid
 
 import pandas as pd
@@ -45,6 +47,8 @@ class IOService:
                 conn.commit()
             return len(df)
         except Exception as exc:
+            msg = '\n'.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+            logging.error(msg)
             raise HTTPException(500, str(exc))
 
     @staticmethod
@@ -73,4 +77,6 @@ class IOService:
             return StreamingResponse(io.BytesIO(csv_buffer.getvalue().encode()), media_type="text/csv",
                                      headers={"Content-Disposition": f"attachment; filename={source}.csv"})
         except Exception as exc:
+            msg = '\n'.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+            logging.error(msg)
             raise HTTPException(500, str(exc))

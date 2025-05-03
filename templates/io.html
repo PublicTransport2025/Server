@@ -4,6 +4,36 @@
     <meta charset="UTF-8">
     <title>[3KA] Импорт</title>
     <link href="/static/io.css" rel="stylesheet" type="text/css">
+    <script>
+        async function uploadTable(source){
+           const input = document.getElementById(source);
+           if (input.files.length === 0) {
+             alert('Пожалуйста, выберите файл');
+             return;
+           }
+
+           const file = input.files[0];
+           const formData = new FormData();
+           formData.append('table', file); // 'file' — имя поля, ожидаемое сервером
+
+
+           try {
+                 const response = await fetch('/web/io/upload/'+source, {
+                    method: 'POST',
+                    body: formData
+                    })
+                 const res_data = await response.json();
+                 console.log(res_data)
+                 if (!response.ok) {
+                     alert(res_data.message)
+                 } else {
+                     alert('Загружено строк в таблицу ' + source + ' ' + res_data.count)
+                 }
+             } catch (error) {
+                 console.log(error);
+             }
+        }
+    </script>
 </head>
 <body>
 <h1>Импорт/ Экспорт базы данных</h1>
@@ -18,11 +48,9 @@
 
     <tr>
         <td>
-            <form action='/web/io/upload/tpus' method='post' enctype="multipart/form-data">
-                <label for="table">Таблица пересадочных узлов</label><br>
-                <input type="file" id="table" name="table" accept="text/csv" value="Выбрать"><br>
-                <input type="submit" value="Загрузить">
-            </form>
+            <label for="tpus">Таблица пересадочных узлов</label><br>
+            <input type="file" id="tpus" name="table" accept="text/csv" value="Выбрать"><br>
+            <button onclick="uploadTable('tpus')">Загрузить</button>
         </td>
         <td>
             <a href="/web/io/download/tpus">Скачать таблицу пересадочных узлов</a>
@@ -31,11 +59,9 @@
 
     <tr>
         <td>
-            <form action='/web/io/upload/stops' method='post' enctype="multipart/form-data">
-                <label for="table">Таблица остановок</label><br>
-                <input type="file" id="table" name="table" accept="text/csv" value="Выбрать"><br>
-                <input type="submit" value="Загрузить">
-            </form>
+            <label for="stops">Таблица остановок</label><br>
+            <input type="file" id="stops" name="table" accept="text/csv" value="Выбрать"><br>
+            <button onclick="uploadTable('stops')">Загрузить</button>
         </td>
         <td>
             <a href="/web/io/download/stops">Скачать таблицу остановок</a>
@@ -45,11 +71,9 @@
 
     <tr>
         <td>
-            <form action='/web/io/upload/atps' method='post' enctype="multipart/form-data">
-                <label for="table">Таблица АТП</label><br>
-                <input type="file" id="table" name="table" accept="text/csv" value="Выбрать"><br>
-                <input type="submit" value="Загрузить">
-            </form>
+            <label for="atps">Таблица АТП</label><br>
+            <input type="file" id="atps" name="table" accept="text/csv" value="Выбрать"><br>
+            <button onclick="uploadTable('atps')">Загрузить</button>
         </td>
         <td>
             <a href="/web/io/download/atps">Скачать таблицу АТП</a>
@@ -59,11 +83,9 @@
 
     <tr>
         <td>
-            <form action='/web/io/upload/routes' method='post' enctype="multipart/form-data">
-                <label for="table">Таблица маршрутов</label><br>
-                <input type="file" id="table" name="table" accept="text/csv" value="Выбрать"><br>
-                <input type="submit" value="Загрузить">
-            </form>
+            <label for="routes">Таблица маршрутов</label><br>
+            <input type="file" id="routes" name="table" accept="text/csv" value="Выбрать"><br>
+            <button onclick="uploadTable('routes')">Загрузить</button>
         </td>
         <td>
             <a href="/web/io/download/routes">Скачать таблицу маршрутов</a>
@@ -72,11 +94,9 @@
 
     <tr>
         <td>
-            <form action='/web/io/upload/sections' method='post' enctype="multipart/form-data">
-                <label for="table">Таблица перегонов</label><br>
-                <input type="file" id="table" name="table" accept="text/csv" value="Выбрать"><br>
-                <input type="submit" value="Загрузить">
-            </form>
+            <label for="sections">Таблица перегонов</label><br>
+            <input type="file" id="sections" name="table" accept="text/csv" value="Выбрать"><br>
+            <button onclick="uploadTable('sections')">Загрузить</button>
         </td>
         <td>
             <a href="/web/io/download/sections">Скачать таблицу перегонов</a>
@@ -85,11 +105,9 @@
 
     <tr>
         <td>
-            <form action='/web/io/upload/timetables' method='post' enctype="multipart/form-data">
-                <label for="table">Таблица расписаний</label><br>
-                <input type="file" id="table" name="table" accept="text/csv" value="Выбрать"><br>
-                <input type="submit" value="Загрузить">
-            </form>
+            <label for="timetables">Таблица расписаний</label><br>
+            <input type="file" id="timetables" name="table" accept="text/csv" value="Выбрать"><br>
+            <button onclick="uploadTable('timetables')">Загрузить</button>
         </td>
         <td>
             <a href="/web/io/download/timetables">Скачать таблицу расписаний</a>

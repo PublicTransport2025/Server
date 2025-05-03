@@ -44,8 +44,6 @@ logging.basicConfig(
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
-    info = await request.body()
-    logging.error(info)
     return JSONResponse(
         status_code=exc.status_code,
         content={"message": exc.detail}
