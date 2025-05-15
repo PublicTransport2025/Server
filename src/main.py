@@ -12,6 +12,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from src.api import api_router
 from src.core.constants import LOCALHOST_IP, PORT
 from src.web import web_router
+from src.api.auth import auth_router
 
 localhost_ip = LOCALHOST_IP
 port = PORT
@@ -31,6 +32,7 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.add_middleware(SessionMiddleware, secret_key=secret_key)
 app.include_router(api_router)
+app.include_router(auth_router)
 app.include_router(web_router)
 
 logging.basicConfig(
