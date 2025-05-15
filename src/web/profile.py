@@ -82,6 +82,36 @@ async def auth(request: Request, code: str, state: str, device_id: str, db_sessi
     request.session['rang'] = user.rang
     return RedirectResponse("/web/profile")
 
+@profile_router.post("/login")
+async def web_login(request: Request, db_session=db_client):
+    form = await request.form()
+    email = form.get("email")
+    password = form.get("password")
+
+    from src.utils.security import verify_password
+    user = db_session.query(User).filter(User.login == email).one_or_none()
+
+    if not user or not user.hash_pass or not verify_password(password, user.hash_pass):
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "error": "Неверный email или пароль"}
+        )
+    
+    if user.rang < 50:
+        raise HTTPException(403, "Нет доступа")
+
+    client_ip = request.headers.get("X-Forwarded-For", request.client.host).split(",")[0]
+    request.session.update({
+        "id": str(user.id),
+        "name": user.name,
+        "rang": user.rang,
+        "created_ip": client_ip
+    })
+
+    log = Log(created_ip=client_ip, level=0, action='Авторизовался по email', user_id=str(user.id))
+    db_session.add(log)
+    db_session.commit()
+    return RedirectResponse("/web/profile", status_code=302)
 
 @profile_router.get('')
 async def profile(request: Request):
