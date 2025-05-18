@@ -14,12 +14,18 @@
     <section>
         <div class='label'>
 
-            <form>
+            <form method="post" action="/web/profile/login">
+              {% if error %}
+                <div class="error" style="color: red; margin-bottom: 1em;">
+                  {{ error }}
+                </div>
+              {% endif %}
                 <label for="email">Email</label>
                 <input type="email" id="email" name="email">
                 <label for="password">Пароль</label>
                 <input type="password" id="password" name="password">
-                <input type="submit" value="Войти" onclick="alert('Авторизация по логину и паролю временно не доступна в целях безопасности. Пожалуйста, воспользуйтесь входом через VKID')">
+                <input type="submit" value="Войти">
+                <!-- <input type="submit" value="Войти" onclick="alert('Авторизация по логину и паролю временно не доступна в целях безопасности. Пожалуйста, воспользуйтесь входом через VKID')"> -->
             </form>
 
             <div>
