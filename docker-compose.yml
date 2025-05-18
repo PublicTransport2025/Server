@@ -15,6 +15,7 @@ services:
     ports:
       - "8080:80"
     environment:
+      - TZ=Europe/Moscow
       - LOCALHOST=${LOCALHOST}
       - PORT=${PORT}
       - VERSION=${VERSION}
