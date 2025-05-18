@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Header, HTTPException, Depends
 
+from src.api.atp import atp_router
 from src.api.navigation import navigation_router
 from src.api.stops import stops_router
 from src.core.constants import API_KEY, VERSION
@@ -21,7 +22,8 @@ else:
 
 all_routers = [
     stops_router,
-    navigation_router
+    navigation_router,
+    atp_router
 ]
 
 for router in all_routers:

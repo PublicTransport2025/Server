@@ -11,3 +11,8 @@ class AtpInput(BaseModel):
 
 class AtpModel(AtpInput):
     id: int
+
+class AtpReport(BaseModel):
+    title: str
+    phone: str
+    report: str
