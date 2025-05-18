@@ -3,6 +3,9 @@ errors.log
 # Input files log
 io/*.csv
 
+# Database schemas
+*.sql
+
 # Backups
 *.7z
 *.zip
