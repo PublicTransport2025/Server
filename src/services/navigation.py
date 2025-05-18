@@ -85,6 +85,16 @@ class NavigationService:
     @staticmethod
     async def check_timetables(route_id: int, fact_time: int, before_time_coef: float, time_coef: float,
                                full_time_coef: float, session: AsyncSession) -> Tuple[int, int, int]:
+        """
+        Оценивает время в пути по постоянным графикам
+        :param route_id: айди маршрута
+        :param fact_time: текущее время в минутах после полуночи
+        :param before_time_coef: коэффециент времени пройденного маршрута
+        :param time_coef: коэффециент времени поездки по маршруту
+        :param full_time_coef: суммарный коэффециент времени маршрута
+        :param session: сесси бд
+        :return: время отправления по расписанию, время в пути, полное время поездки
+        """
         stmt = select(Timetable).where(Timetable.route_id == route_id).order_by(Timetable.start)
         result = await session.execute(stmt)
         results = result.fetchall()
@@ -106,10 +116,13 @@ class NavigationService:
                                    fact_time: int, session: AsyncSession) -> Tuple[List[RouteSimple], Dict[Route, int]]:
         """
         Построение беспересадочных маршрутов
-        :param from_id: айди 1 остановки
-        :param to_id: айди последней остановки
+        :param stops_from: множество начальных отсановок
+        :param stops_to: множество конечных отсановок
+        :param care: необходимость низкопольного ПС
+        :param priority: приоритет: 0 - загруженность, 1 - время, 2 - баланс
+        :param fact_time: текущее время в минутах после полуночи
         :param session: сессия БД
-        :return:
+        :return: модели беспересадочных маршрутов, краткая статистика по маршрутам
         """
 
         # Создание псевдонимов таблиц
@@ -189,7 +202,6 @@ class NavigationService:
         routes_df['route_id'] = [routes_df.iloc[i, 0].id for i in range(len(routes_df))]
         # Определение брифа беспересадочных маршрутов
         routes_brief = routes_df.set_index('route_id')['long']
-        print(routes_brief)
 
         # Подготовка json-ответа
         simple_routes = []
@@ -219,6 +231,17 @@ class NavigationService:
     @staticmethod
     async def create_double_routes(stops_from: List[int], stops_to: List[int], care: bool, priority: int,
                                    rb, fact_time: int, session: AsyncSession) -> List[RouteDouble]:
+        """
+        Построение маршрутов с 1 пересадкой
+        :param stops_from: множество начальных отсановок
+        :param stops_to: множество конечных отсановок
+        :param care: необходимость низкопольного ПС
+        :param priority: приоритет: 0 - загруженность, 1 - время, 2 - баланс
+        :param rb: статистика по беспересадочным маршрутам
+        :param fact_time: текущее время в минутах после полуночи
+        :param session: сессия БД
+        :return: модели маршрутов с 1 пересадкой
+        """
         s1 = aliased(Section)
         s2 = aliased(Section)
 
@@ -309,7 +332,8 @@ class NavigationService:
 
                 # Оценка времени по графику 2 маршрута
                 timetable_start2, timetable_trip2, timetable_full2 \
-                    = await NavigationService().check_timetables(route2.id, fact_time + real1 + 5, before_time_coef2, time_coef2,
+                    = await NavigationService().check_timetables(route2.id, fact_time + real1 + 5, before_time_coef2,
+                                                                 time_coef2,
                                                                  full_time_coef2, session)
                 vehicles_start2, vehicles_trip2, vehicles_full2 = None, None, None
 
@@ -321,10 +345,10 @@ class NavigationService:
                     double_routes_df.iloc[i, 15] = f'в {int(timetable_start2 // 60):02}:{int(timetable_start2 % 60):02}'
                     double_routes_df.iloc[i, 16] = f'{int(timetable_trip2 // 60):02}:{int(timetable_trip2 % 60):02}'
                     double_routes_df.iloc[i, 18] = int(timetable_full2)
-                    double_routes_df.iloc[i, 19] = int(timetable_full2 - timetable_trip2 + (1 + 1 * max_load2) * timetable_trip2)
+                    double_routes_df.iloc[i, 19] = int(
+                        timetable_full2 - timetable_trip2 + (1 + 1 * max_load2) * timetable_trip2)
                 elif vehicles_full2:
                     pass
-
 
         # Сортировка датасета маршрутов
         if priority == 0:  # По загруженности
@@ -400,8 +424,6 @@ class NavigationService:
                             label2=route2.label, number2=route2.number, load2=load2, stops2=stops2, stop2=stop2,
                             time_label2=time_label2, time_begin2=time_begin2, time_road2=time_road2
                             ))
-            # route = await session.get(Route, section.route_id)
-            # routes.append(route)
         return double_routes
 
     @staticmethod

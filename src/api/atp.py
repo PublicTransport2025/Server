@@ -18,8 +18,7 @@ atp_router = APIRouter(
 @atp_router.get("/", response_model=AtpReport)
 async def get_atp_report(number: str, session: AsyncSession = db_async_client) -> AtpReport:
     """
-    Передает список всех остановок города
-    :return:
+    Передает отчет о данных АТП
     """
     atp_report = await AtpService.route_report(number, session)
     return atp_report
