@@ -7,7 +7,7 @@ from passlib.hash import bcrypt
 from src.schemas.token import Token
 from src.schemas.user_auth import UserLogin, UserCreate
 from src.core.db import db_client
-from src.services.auth import login_user
+from src.services.auth import AuthService
 from src.models.users import User
 from src.utils.security import create_tokens, hash_password, decode_token
 
@@ -23,7 +23,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(),
     :param db: сессия базы данных
     :return: access и refresh токены, а также время жизни access-токена
     """
-    data = login_user(db, form_data.username, form_data.password)
+    data = AuthService().login_user(db, form_data.username, form_data.password)
     return {"access_token": data["access_token"],
             "refresh_token": data["refresh_token"],
             "expires_in": data["expires_in"]}

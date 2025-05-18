@@ -82,6 +82,7 @@ async def auth(request: Request, code: str, state: str, device_id: str, db_sessi
     request.session['rang'] = user.rang
     return RedirectResponse("/web/profile")
 
+
 @profile_router.post("/login")
 async def web_login(request: Request, db_session=db_client):
     form = await request.form()
@@ -92,11 +93,28 @@ async def web_login(request: Request, db_session=db_client):
     user = db_session.query(User).filter(User.login == email).one_or_none()
 
     if not user or not user.hash_pass or not verify_password(password, user.hash_pass):
+        client_id = WEB_CLIENT_ID
+        redirect_uri = WEB_REDIRECT_URI
+
+        state = str(uuid4())
+        request.session["state"] = state
+
+        characters = string.ascii_letters + string.digits + '_-'
+        code_verifier = ''.join(random.choice(characters) for _ in range(random.randint(43, 128)))
+        request.session["code_verifier"] = code_verifier
+
+        s256_digester = hashlib.sha256()
+        input_bytes = code_verifier.encode('iso-8859-1')
+        s256_digester.update(input_bytes)
+        digest_bytes = s256_digester.digest()
+        code_challenge = base64.urlsafe_b64encode(digest_bytes).decode('utf-8').rstrip('=')
         return templates.TemplateResponse(
             "login.html",
-            {"request": request, "error": "Неверный email или пароль"}
+            {"request": request, "error": "Неверный email или пароль", "redirect_uri": redirect_uri,
+             "client_id": client_id, "state": state,
+             "code_challenge": code_challenge}
         )
-    
+
     if user.rang < 50:
         raise HTTPException(403, "Нет доступа")
 
@@ -112,6 +130,7 @@ async def web_login(request: Request, db_session=db_client):
     db_session.add(log)
     db_session.commit()
     return RedirectResponse("/web/profile", status_code=302)
+
 
 @profile_router.get('')
 async def profile(request: Request):
@@ -150,7 +169,7 @@ async def change_name(request: Request, data: NameUpd, db_session=db_client):
 
 
 @profile_router.get('/logout')
-async def change_name(request: Request,db_session=db_client):
+async def change_name(request: Request, db_session=db_client):
     """
     Осуществляет выход из аккаунта редактора
     """

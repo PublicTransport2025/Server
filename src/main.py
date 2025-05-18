@@ -12,7 +12,6 @@ from starlette.middleware.sessions import SessionMiddleware
 from src.api import api_router
 from src.core.constants import LOCALHOST_IP, PORT
 from src.web import web_router
-from src.api.auth import auth_router
 
 localhost_ip = LOCALHOST_IP
 port = PORT
