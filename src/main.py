@@ -32,7 +32,6 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.add_middleware(SessionMiddleware, secret_key=secret_key)
 app.include_router(api_router)
-app.include_router(auth_router)
 app.include_router(web_router)
 
 logging.basicConfig(

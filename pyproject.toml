@@ -7,7 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 alembic = "^1.13.3"
-python = "^3.13.3"
+python = "^3.12"
 uvicorn = "^0.34.0"
 fastapi = "^0.115.12"
 pandas = "^2.2.3"
