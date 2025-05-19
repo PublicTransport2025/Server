@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Header, HTTPException, Depends
 
+from src.api.atp import atp_router
 from src.api.navigation import navigation_router
 from src.api.stops import stops_router
 from src.api.auth import auth_router
@@ -23,6 +24,7 @@ else:
 all_routers = [
     stops_router,
     navigation_router,
+    atp_router,
     auth_router
 ]
 

@@ -24,7 +24,7 @@
                 return
             }
 
-            const emailRegex = new RegExp("^[(a-z|\\d)]+@[(a-z|\\d)]+\\.[(a-z|\\d)]+$");
+            const emailRegex = new RegExp("^[a-z0-9]+@[a-z0-9]+\\.[a-z0-9]+$");
             if (!emailRegex.test(report)){
                 alert('Некорректный адрес электронной почты');
                 return
@@ -100,7 +100,7 @@
                 return
             }
 
-            const emailRegex = new RegExp("^[a-z]+@[a-z]+\.[a-z]+$");
+            const emailRegex = new RegExp("^[a-z0-9]+@[a-z0-9]+\\.[a-z0-9]+$");
             if (!emailRegex.test(report)){
                 alert('Некорректный адрес электронной почты');
                 return

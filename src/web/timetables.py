@@ -25,7 +25,7 @@ async def show_timetables(request: Request, id: int, db_session: Session = db_cl
 
     atps = db_session.query(Atp)
 
-    routes = db_session.query(Route).where(Route.atp_id == id).all()
+    routes = db_session.query(Route).where(Route.atp_id == id).order_by(Route.id).all()
     routes_dict = []
     for route in routes:
         timetables = []

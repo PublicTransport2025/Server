@@ -3,11 +3,13 @@ import traceback
 from typing import Type
 
 from fastapi import HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 from src.models.logistic import Atp, Route
 from src.models.users import Log
-from src.schemas.atp import AtpInput, AtpModel
+from src.schemas.atp import AtpInput, AtpModel, AtpReport
 
 
 class AtpService:
@@ -113,6 +115,24 @@ class AtpService:
                       user_id=user_id)
             db_session.add(log)
             db_session.commit()
+        except Exception as exc:
+            msg = '\n'.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+            logging.error(msg)
+            raise HTTPException(500, str(exc))
+
+    @staticmethod
+    async def route_report(number: str, session: AsyncSession) -> AtpReport:
+        """
+        Выбирает из БД отчет об АТП
+        :param session: сессия БД
+        :return: список остановок
+        """
+        try:
+            result = await session.execute(select(Route).where(Route.number == number).limit(1))
+            route = result.one()[0]
+            atp = await session.get(Atp, route.atp_id)
+            atp_report = AtpReport(title=atp.title, phone=atp.phone, report=atp.report)
+            return atp_report
         except Exception as exc:
             msg = '\n'.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
             logging.error(msg)
