@@ -52,8 +52,6 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 @app.exception_handler(RequestValidationError)
 async def integrity_exception_handler(request: Request, exc: RequestValidationError):
-    info = await request.body()
-    logging.error(info)
     return JSONResponse(
         status_code=422,
         content={"message": "Проверьте правильность ввода и заполненность всех полей"}

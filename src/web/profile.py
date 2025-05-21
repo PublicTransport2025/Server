@@ -62,7 +62,7 @@ async def auth(request: Request, code: str, state: str, device_id: str, db_sessi
     """
     if request.session['state'] != state:
         raise HTTPException(400, "Security error")
-    vkid = await decode_vk_id(request.session["code_verifier"], code, device_id, state, True)
+    vkid, _ = await decode_vk_id(request.session["code_verifier"], code, device_id, state, True)
     vkid = str(vkid)
     user = db_session.query(User).filter(User.vkid == vkid).filter(User.rang >= 50).one_or_none()
     if user is None:
