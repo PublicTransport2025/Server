@@ -1,39 +1,100 @@
 import logging
 import traceback
-from typing import List, Type
+from typing import List, Type, Optional
 
 from fastapi import HTTPException
 from geopy.distance import geodesic
-from sqlalchemy import select
+from sqlalchemy import select, insert, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 from src.models.logistic import Stop, Tpu
-from src.models.users import Log
+from src.models.users import Log, UserStopLikes
 from src.schemas.coord import Coord
 from src.schemas.stop import StopModel, StopUpd, StopInput
+from src.utils.security import decode_token
 
 
 class StopService:
     @staticmethod
-    async def get_all_stops(session: AsyncSession) -> List[StopModel]:
+    async def get_all_stops(session: AsyncSession, token: Optional[str]) -> List[StopModel]:
         """
         Выбирает из БД все остановки в виде JSON-схем
+        :param token: авторизационный токен пользователя
         :param session: сессия БД
         :return: список остановок
         """
         try:
+            user_id = None
+            if token:
+                try:
+                    payload = decode_token(token)
+                    user_id = payload["sub"]
+                except Exception as exc:
+                    msg = '\n'.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+                    print(msg)
+
+            liked = set()
+            if user_id:
+                result = await session.execute(select(UserStopLikes).where(UserStopLikes.user_id == user_id))
+                for stop in result.scalars().all():
+                    liked.add(stop.stop_id)
             stops = []
             result = await session.execute(select(Stop).where(Stop.stage > 0))
             for stop in result.scalars().all():
                 stops.append(
-                    StopModel(id=stop.id, name=stop.name, about=stop.about, coord=Coord(lat=stop.lat, lon=stop.lon)))
+                    StopModel(id=stop.id, name=stop.name, about=stop.about,
+                              coord=Coord(lat=stop.lat, lon=stop.lon), like=stop.id in liked))
             return stops
         except Exception as exc:
             msg = '\n'.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
             logging.error(msg)
             raise HTTPException(500, str(exc))
 
+    @staticmethod
+    async def like_stop(session: AsyncSession, token: str, stop_id: int) -> StopModel:
+        """
+        Добавляет остановку в избранное
+        :param stop: айди остановки
+        :param token: Авторизационный токен пользователя
+        :param session: Сессия БД
+        :return: Модель обновленной остановки
+        """
+        try:
+            payload = decode_token(token)
+            user_id = payload["sub"]
+            await session.execute(insert(UserStopLikes).values(user_id=user_id, stop_id=stop_id))
+            await session.commit()
+            stop = await session.get(Stop, stop_id)
+            return StopModel(id=stop.id, name=stop.name, about=stop.about,
+                             coord=Coord(lat=stop.lat, lon=stop.lon), like=True)
+        except Exception as exc:
+            msg = '\n'.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+            logging.error(msg)
+            raise HTTPException(500, str(exc))
+
+    @staticmethod
+    async def dislike_stop(session: AsyncSession, token: str, stop_id: int) -> StopModel:
+        """
+        Удаляет остановку из избранного
+        :param stop: айди остановки
+        :param token: Авторизационный токен пользователя
+        :param session: Сессия БД
+        :return: Модель обновленной остановки
+        """
+        try:
+            payload = decode_token(token)
+            user_id = payload["sub"]
+            await session.execute(delete(UserStopLikes).where(UserStopLikes.user_id==user_id,
+            UserStopLikes.stop_id==stop_id))
+            await session.commit()
+            stop = await session.get(Stop, stop_id)
+            return StopModel(id=stop.id, name=stop.name, about=stop.about,
+                             coord=Coord(lat=stop.lat, lon=stop.lon), like=False)
+        except Exception as exc:
+            msg = '\n'.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+            logging.error(msg)
+            raise HTTPException(500, str(exc))
     @staticmethod
     def show_stops(db_session: Session) -> List[Type[Stop]]:
         """
@@ -127,7 +188,6 @@ class StopService:
             for tpu in tpus:
                 db_session.delete(tpu)
             db_session.commit()
-
 
             stops = db_session.query(Stop).order_by(Stop.id).all()
             for i in range(len(stops)):

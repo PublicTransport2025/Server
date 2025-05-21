@@ -9,6 +9,7 @@ class StopModel(BaseModel):
     id: int
     name: str
     about: Optional[str]
+    like: bool = False
     coord: Coord
 
 
