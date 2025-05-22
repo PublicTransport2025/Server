@@ -1,14 +1,18 @@
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Header
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from src.core.db import db_client
+from src.models.email_codes import EmailCode
 from src.models.users import User
 from src.schemas.token import Token, VKLogin
 from src.schemas.user_auth import UserCreate
 from src.services.auth import AuthService
+from src.utils.email_sender import generate_code, send_email
 from src.utils.security import create_tokens, hash_password, decode_token
 from src.utils.users import decode_vk_id
+
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -98,7 +102,12 @@ def signup(data: UserCreate, db: Session = db_client):
     :return: access и refresh токены, а также время жизни access токена
     """
     if db.query(User).filter(User.login == data.email).first():
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Email has already registered")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Почта уже зарегистрирована")
+    email_code = db.query(EmailCode).filter_by(email=data.email).first()
+
+    if not email_code or email_code.code != data.code or datetime.utcnow() - email_code.created_at > timedelta(minutes=10):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Неверный или просроченный код")
+    
     user = User(
         name=data.name,
         login=data.email,
@@ -116,3 +125,55 @@ def signup(data: UserCreate, db: Session = db_client):
             "name": user.name,
             "email": bool(user.login),
             "vk": bool(user.vkid)}
+
+@auth_router.post("/forgot-password")
+def forgot_password(email: str, db: Session = db_client):
+    """
+    Запрос на сброс пароля — отправляет код на почту
+
+    :param email: email пользователя
+    :param db: сессия базы данных
+    :return: сообщение об отправке кода
+    """
+    user = db.query(User).filter(User.login == email).first()
+    if not user:
+        raise HTTPException(404, "Пользователь не найден")
+
+    code = generate_code()
+    body = f"Ваш код сброса пароля: {code}"
+    send_email(email, "Сброс пароля", body)
+
+    existing = db.query(EmailCode).filter_by(email=email).first()
+    if existing:
+        existing.code = code
+        existing.created_at = datetime.utcnow()
+    else:
+        db.add(EmailCode(email=email, code=code))
+
+    db.commit()
+    return {"message": "Код сброса пароля отправлен на почту"}
+
+
+@auth_router.post("/reset-password")
+def reset_password(email: str, code: str, new_password: str, db: Session = db_client):
+    """
+    Сброс пароля по email и коду
+
+    :param email: email пользователя
+    :param code: код подтверждения
+    :param new_password: новый пароль
+    :param db: сессия базы данных
+    :return: сообщение об успешной смене пароля
+    """
+    record = db.query(EmailCode).filter_by(email=email).first()
+    if not record or record.code != code or datetime.utcnow() - record.created_at > timedelta(minutes=10):
+        raise HTTPException(400, "Неверный или просроченный код")
+
+    user = db.query(User).filter(User.login == email).first()
+    if not user:
+        raise HTTPException(404, "Пользователь не найден")
+
+    user.hash_pass = hash_password(new_password)
+    db.delete(record)
+    db.commit()
+    return {"message": "Пароль успешно изменён"}
