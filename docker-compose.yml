@@ -10,7 +10,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-app:
+  app:
     build: .
     ports:
       - "8080:80"
