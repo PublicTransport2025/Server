@@ -13,7 +13,7 @@ stops_router = APIRouter(
 )
 
 
-@stops_router.get("/", response_model=List[StopModel])
+@stops_router.get("/all", response_model=List[StopModel])
 async def get_all_stops(token: Optional[str] = Header(None), session: AsyncSession = db_async_client):
     """
     Передает список всех остановок города
@@ -25,7 +25,7 @@ async def get_all_stops(token: Optional[str] = Header(None), session: AsyncSessi
     return stops
 
 
-@stops_router.post("/", response_model=StopModel)
+@stops_router.post("/like", response_model=StopModel)
 async def like_stop(stop_id: int, token: str = Header(...), session: AsyncSession = db_async_client):
     """
     Добавляет остановку в избранное
@@ -38,7 +38,7 @@ async def like_stop(stop_id: int, token: str = Header(...), session: AsyncSessio
     return stop
 
 
-@stops_router.delete("/", response_model=StopModel)
+@stops_router.delete("/dislike", response_model=StopModel)
 async def like_stop(stop_id: int, token: str = Header(...), session: AsyncSession = db_async_client):
     """
     Удаляет остановку из избранного
