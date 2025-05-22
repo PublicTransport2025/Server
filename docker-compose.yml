@@ -10,10 +10,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  app:
+app:
     build: .
     ports:
       - "8080:80"
+    env_file:
+      - .env
     environment:
       - TZ=Europe/Moscow
       - LOCALHOST=${LOCALHOST}
@@ -32,6 +34,13 @@ services:
       - MOBILE_CLIENT_SECRET=${MOBILE_CLIENT_SECRET}
       - MOBILE_REDIRECT_URI=${MOBILE_REDIRECT_URI}
       - ADMIN_VK=${ADMIN_VK}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - MAP_KEY=${MAP_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_ALGORITHM=${JWT_ALGORITHM}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
+      - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS}
     depends_on:
       - db
 
