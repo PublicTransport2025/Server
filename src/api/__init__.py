@@ -4,6 +4,7 @@ from src.api.atp import atp_router
 from src.api.navigation import navigation_router
 from src.api.stops import stops_router
 from src.api.auth import auth_router
+from src.api.email_verification import email_router
 from src.core.constants import API_KEY, VERSION
 
 
@@ -25,7 +26,8 @@ all_routers = [
     stops_router,
     navigation_router,
     atp_router,
-    auth_router
+    auth_router,
+    email_router
 ]
 
 for router in all_routers:
