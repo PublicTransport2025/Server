@@ -211,3 +211,32 @@ class StopService:
             msg = '\n'.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
             logging.error(msg)
             raise HTTPException(500, str(exc))
+
+
+    @staticmethod
+    def delete_stop(id: int, db_session: Session, ip: str, user_id: str) -> None:
+        """
+        Удаляет модель АТП из базы данных.
+        При этом его маршруты становятся неактивынми, но не удаляются
+        :param id: айди удаляемого АТП
+        :param db_session: сессия баз данных
+        :param ip: айпи редактора
+        :param user_id: айди редактора
+        :return:
+        """
+        try:
+            stop = db_session.query(Stop).filter_by(id=id).one()
+            db_session.delete(stop)
+
+            log = Log(created_ip=ip,
+                      level=5,
+                      action='Удалил ООТ',
+                      information=str(id),
+                      user_id=user_id)
+            db_session.add(log)
+
+            db_session.commit()
+        except Exception as exc:
+            msg = '\n'.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+            logging.error(msg)
+            raise HTTPException(500, str(exc))
