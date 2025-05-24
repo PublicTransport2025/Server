@@ -1,0 +1,43 @@
+body{
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #E8EBFF;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #000080;
+    color: white;
+}
+
+tr:nth-child(even) {
+    background-color: #FDFFE5;
+}
+
+tr:nth-child(odd) {
+    background-color: #377E70;
+}
+
+input{
+    width: 95%;
+}
+
+h2{
+    font-family: Georgia, sans-serif;
+    color: #000080;
+    margin: 5px;
+}
+
+button{
+    margin: 2px;
+}

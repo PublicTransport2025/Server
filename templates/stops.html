@@ -3,39 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <title>[3KA] Остановки</title>
-    <!--link href="/static/stops.css" rel="stylesheet" type="text/css"-->
+    <link href="/static/datatable.css" rel="stylesheet" type="text/css">
     <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
         .map-block {
-            height: 45vh; /* Занимает половину высоты экрана */
-            background-color: yellow;
-        }
-        .header-container {
-            height: 10vh; /* Занимает оставшуюся половину высоты экрана */
-            overflow-y: hidden; /* Вертикальная прокрутка */
+            height: 50vh; /* Занимает половину высоты экрана */
+            background-color: white;
         }
         .table-container {
-            height: 45vh; /* Занимает оставшуюся половину высоты экрана */
+            height: 50vh; /* Занимает оставшуюся половину высоты экрана */
             overflow-y: auto; /* Вертикальная прокрутка */
             text-align: center;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        input{
-            width: 95%;
         }
     </style>
     <script src="https://api-maps.yandex.ru/v3/?apikey={{map_key}}&lang=ru_RU"></script>
@@ -200,19 +177,55 @@
                 console.log(error);
             }
         }
+
+        async function deleteStop(button) {
+            const row = button.parentNode.parentNode;
+            const id = row.cells[0].textContent;
+
+            try {
+                const response = await fetch('/web/stops/'+id, {
+                    method: 'DELETE',
+                });
+                const res_data = await response.json();
+                console.log(res_data)
+                if (!response.ok) {
+                    alert(res_data.message)
+                } else {
+                    row.parentNode.removeChild(row);
+                    alert("ООТ удалена");
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+        async function resetTPU() {
+            try {
+                const response = await fetch('/web/stops/reset_tpu', {
+                    method: 'POST'
+                });
+                const res_data = await response.json();
+                console.log(res_data)
+                if (!response.ok) {
+                    alert(res_data.message)
+                } else {
+                    alert("Перераспределение транспортно-пересадочных узлов запущено");
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
     </script>
 </head>
 <body>
-<div class="header-container">
-    <h1>Редактор остановочных пунктов</h1>
-    <a href="/web/profile">В личный кабинет</a>
-</div>
-
 <div class="map-block">
     <div id="map" style="width: 100%; height: 100%"></div>
 </div>
 <div class="table-container">
-    <form method="post" action="/web/stops/reset_tpu"><input type="submit" value="Распределить остановки по транспортно пересадочным узлам"></form>
+    <h2>Редактор остановочных пунктов</h2>
+    <button onclick="window.location.href='/web/profile'"> В личный кабинет</button>
+    <button onclick="resetTPU()">Перераспределить ТПУ</button>
     <table id="stops_table">
         <tr>
             <th>ID</th>
@@ -250,6 +263,7 @@
                 <button onclick="moveToCoordinates(this)">Показать</button>
                 <button onclick="writeNew(this)">Записать</button>
                 <button onclick="updateStop(this)">Обновить</button>
+                <button onclick="deleteStop(this)">Удалить</button>
         </tr>
         {% endfor %}
 

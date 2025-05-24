@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, BackgroundTasks
 from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -52,12 +52,25 @@ async def add_stop(request: Request, data: StopInput, db_session: Session = db_c
 
 
 @stops_router.post('/reset_tpu')
-async def reset_tpu(request: Request, db_session: Session = db_client):
+async def reset_tpu(request: Request, background_tasks: BackgroundTasks, db_session: Session = db_client):
     """
     Распределение всех остановок по пересадочным узлам
     """
     if not request.session.keys().__contains__('id') or request.session['rang'] < 50:
         return RedirectResponse("/web/profile/login")
+    ip = request.session['created_ip']
+    id = request.session['id']
+    background_tasks.add_task(StopService().reset_tpu, db_session, ip, id)
+    return 200
 
-    StopService().reset_tpu(db_session, request.session['created_ip'], request.session['id'])
-    return RedirectResponse("/web/stops", status_code=303)
+
+@stops_router.delete('/{id}')
+async def delete_stop(request: Request, id: int, db_session: Session = db_client):
+    """
+    Обрабатывает запрос удаления ООТ
+    """
+    if not request.session.keys().__contains__('id') or request.session['rang'] < 50:
+        return RedirectResponse("/web/profile/login", status_code=303)
+
+    StopService.delete_stop(id, db_session, request.session['created_ip'], request.session['id'])
+    return JSONResponse(content={"message": "ООТ удалена"}, status_code=200)
