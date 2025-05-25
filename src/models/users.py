@@ -2,16 +2,18 @@ import uuid
 from datetime import datetime
 from typing import List
 
-from sqlalchemy import Column, UUID, String, Integer, Text, DateTime, ForeignKey, func, Table
+from sqlalchemy import Column, UUID, String, Integer, Text, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, relationship
 
 from src.core.db import Base
+
 
 class UserStopLikes(Base):
     __tablename__ = "user_stop"
 
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
     stop_id = Column(Integer, ForeignKey("stops.id", ondelete="CASCADE"), primary_key=True)
+
 
 class User(Base):
     __tablename__ = "users"
@@ -22,8 +24,7 @@ class User(Base):
     login: str = Column(String, nullable=True, unique=True, index=True)
     hash_pass = Column(String, nullable=True)
 
-
-    vkid: str = Column(String, nullable=True)
+    vkid: str = Column(String, nullable=True, unique=True, index=True)
 
     rang: int = Column(Integer, nullable=False, default=5)
 
@@ -44,6 +45,3 @@ class Log(Base):
 
     user_id: Mapped[UUID] = Column(ForeignKey("users.id", ondelete="SET NULL"), nullable=False)
     user: Mapped["User"] = relationship(back_populates="logs")
-
-
-

@@ -11,7 +11,7 @@ class Atp(Base):
     __tablename__ = "atps"
 
     id: int = Column(Integer, Sequence('atps_seq'), primary_key=True)
-    title: str = Column(String, nullable=False, unique=True)
+    title: str = Column(String, nullable=False, unique=True, index=True)
     numbers: str = Column(String, nullable=False, unique=True)
 
     about: str = Column(String, nullable=True)
@@ -25,14 +25,14 @@ class Stop(Base):
     __tablename__ = "stops"
 
     id: int = Column(Integer, Sequence('stops_seq'), primary_key=True)
-    name: str = Column(String, nullable=False)
+    name: str = Column(String, nullable=False, index=True)
     about: str = Column(String, nullable=True)
 
     lat: float = Column(Float, nullable=False)
     lon: float = Column(Float, nullable=False)
 
     stage: int = Column(Integer, nullable=False, default=0)
-    tpu_id: Mapped[int] = Column(ForeignKey("tpus.id", ondelete="CASCADE"), nullable=True)
+    tpu_id: Mapped[int] = Column(ForeignKey("tpus.id", ondelete="CASCADE"), nullable=True, index=True)
     tpu: Mapped["Tpu"] = relationship(back_populates="stops")
     sections: Mapped[List["Section"]] = relationship(back_populates="stop")
 
@@ -71,7 +71,7 @@ class Section(Base):
     route_id: Mapped[int] = Column(ForeignKey("routes.id", ondelete="CASCADE"), primary_key=True)
     order: int = Column(Integer, primary_key=True)
 
-    stop_id: Mapped[int] = Column(ForeignKey("stops.id", ondelete="CASCADE"), nullable=False)
+    stop_id: Mapped[int] = Column(ForeignKey("stops.id", ondelete="CASCADE"), nullable=False, index=True)
     coef: float = Column(Float, nullable=False)
     stage: int = Column(Integer, default=1)
     load: int = Column(Integer, default=0)
@@ -100,10 +100,10 @@ class Timetable(Base):
     id: int = Column(Integer, Sequence('timetables_seq'), primary_key=True)
 
     day = Column(Date, nullable=True)
-    start = Column(Time, nullable=False)
+    start = Column(Time, nullable=False, index=True)
     lap = Column(Time, nullable=False)
 
-    route_id: Mapped[int] = Column(ForeignKey("routes.id", ondelete="CASCADE"), nullable=True)
+    route_id: Mapped[int] = Column(ForeignKey("routes.id", ondelete="CASCADE"), nullable=True, index=True)
     route: Mapped["Route"] = relationship(back_populates="timetables")
 
 
@@ -113,11 +113,12 @@ class Traffic(Base):
     id: int = Column(Integer, Sequence('traffic_seq'), primary_key=True)
 
     day = Column(Date, nullable=True)
-    start = Column(Time, nullable=False)
+    start = Column(Time, nullable=False, index=True)
     end = Column(Time, nullable=False)
     lap = Column(Time, nullable=False)
+    round = Column(Boolean, default=False)
 
     vehicles: int = Column(Integer, default=1)
 
-    route_id: Mapped[int] = Column(ForeignKey("routes.id", ondelete="CASCADE"), nullable=True)
+    route_id: Mapped[int] = Column(ForeignKey("routes.id", ondelete="CASCADE"), nullable=True, index=True)
     route: Mapped["Route"] = relationship(back_populates="traffics")
