@@ -94,6 +94,17 @@
 
     <tr>
         <td>
+            <label for="charts">Таблица схем движения</label><br>
+            <input type="file" id="charts" name="charts" accept="text/csv" value="Выбрать"><br>
+            <button onclick="uploadTable('charts')">Загрузить</button>
+        </td>
+        <td>
+            <a href="/web/io/download/charts">Скачать таблицу схем движения</a>
+        </td>
+    </tr>
+
+    <tr>
+        <td>
             <label for="sections">Таблица перегонов</label><br>
             <input type="file" id="sections" name="table" accept="text/csv" value="Выбрать"><br>
             <button onclick="uploadTable('sections')">Загрузить</button>
