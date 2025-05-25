@@ -31,6 +31,9 @@ class IOService:
             number = source + str(uuid.uuid4()) + '.csv'
             df = pd.read_csv(io.StringIO(contents.decode('utf-8')), sep=';')
             df.to_csv('io/' + number, sep=';', quoting=1, index=False)
+            if source == 'charts':
+                df['lats'] = df['lats'].str.replace('[', '{', regex=False).str.replace(']', '}', regex=False)
+                df['lons'] = df['lons'].str.replace('[', '{', regex=False).str.replace(']', '}', regex=False)
             log = Log(created_ip=ip,
                       level=10,
                       action='Загрузил таблицу',

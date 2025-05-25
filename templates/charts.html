@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>[3KA] Остановки</title>
+    <link href="/static/datatable.css" rel="stylesheet" type="text/css">
+    <style>
+        .map-block {
+            height: 50vh; /* Занимает половину высоты экрана */
+            background-color: white;
+        }
+        .table-container {
+            height: 50vh; /* Занимает оставшуюся половину высоты экрана */
+            overflow-y: auto; /* Вертикальная прокрутка */
+            text-align: center;
+        }
+    </style>
+    <script src="https://api-maps.yandex.ru/v3/?apikey={{map_key}}&lang=ru_RU"></script>
+    <script>
+        let map;
+        let ff;
+        let names;
+        let editing = -1;
+
+        let lat_new;
+        let lon_new;
+
+        initMap();
+
+        async function initMap() {
+            await ymaps3.ready;
+
+            const {YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer, YMapMarker, YMapListener} = ymaps3;
+
+            map = new YMap(document.getElementById('map'), {location: {center: [39.2, 51.68], zoom: 12}});
+
+
+            map.addChild(new YMapDefaultSchemeLayer());
+            ff = new YMapDefaultFeaturesLayer();
+            names = new YMapDefaultFeaturesLayer();
+            map.addChild(ff);
+
+            const clickCallback = (object, event) => {
+                const coords = event.coordinates;
+                addNewIcon(coords[0], coords[1]);
+                lons.value = lons.value + " " + coords[0];
+                lats.value = lats.value + " " + coords[1];
+            };
+
+            const mapListener = new YMapListener({
+                layer: 'any',
+                onClick: clickCallback,
+            });
+
+            map.addChild(mapListener);
+        }
+
+        function showStop(lat, lon) {
+            const {YMapMarker, YMapDefaultFeaturesLayer} = ymaps3;
+
+            map.setLocation({
+                center: [lon, lat],
+                zoom: 18
+            });
+
+            const content = document.createElement('section');
+            const image = document.createElement('img');
+            image.src = '/static/point2.png';
+            content.appendChild(image);
+            const marker = new YMapMarker({coordinates: [lon, lat], draggable: false}, content);
+            map.addChild(marker);
+        }
+
+
+        function addNewIcon(lat, lon) {
+            const {YMapMarker, YMapDefaultFeaturesLayer} = ymaps3;
+
+            const content = document.createElement('section');
+            const image = document.createElement('img');
+            image.src = '/static/point.png';
+            content.appendChild(image);
+            const marker = new YMapMarker({coordinates: [lat, lon], draggable: false}, content);
+            map.addChild(marker);
+        }
+
+
+        function writeNew(button) {
+            const row = button.parentNode.parentNode;
+            row.cells[4].querySelector('input').value = lat_new;
+            row.cells[3].querySelector('input').value = lon_new;
+            moveToCoordinates(button);
+        }
+
+
+        function editChart(button) {
+            const row = button.parentNode.parentNode;
+            editing = row.cells[0].textContent;
+            lats.value=row.cells[0].querySelector('input').value;
+            lons.value=row.cells[1].querySelector('input').value;
+            title.value=row.cells[1].textContent;
+
+            const lat_values = lats.value.trim().split(' ');
+            const lon_values = lons.value.trim().split(' ');
+
+            for (let i = 0; i < lat_values.length; i++) {
+                addNewIcon(lon_values[i], lat_values[i])
+            }
+
+            const {YMapMarker, YMapDefaultFeaturesLayer} = ymaps3;
+
+            map.setLocation({
+                center: [lon_values[0], lat_values[0]],
+                zoom: 17
+            });
+        }
+
+        async function delChart(button) {
+            const row = button.parentNode.parentNode;
+            const id = row.cells[0].textContent;
+
+            try {
+                const response = await fetch('/web/charts/'+id, {
+                    method: 'DELETE',
+                });
+                const res_data = await response.json();
+                console.log(res_data)
+                if (!response.ok) {
+                    alert(res_data.message)
+                } else {
+                    row.parentNode.removeChild(row);
+                    alert("Схема движения удалена");
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+        async function clearInput() {
+            lats.value="";
+            lons.value="";
+        }
+
+        async function clearAll() {
+            const {YMapMarker, YMapDefaultFeaturesLayer} = ymaps3;
+            map.removeChild(ff);
+            ff = new YMapDefaultFeaturesLayer();
+            map.addChild(ff);
+
+            lats.value="";
+            lons.value="";
+            title.value=""
+        }
+
+        async function saveInput() {
+            const lats_str = lats.value;
+            const lons_str = lons.value;
+            const title_str = title.value;
+
+            data = {title_str, lats_str, lons_str}
+            const jsonData = JSON.stringify(data);
+            console.log(jsonData);
+
+            try {
+                const response = await fetch('/web/charts', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonData
+                });
+                const res_data = await response.json();
+                console.log(res_data)
+                if (!response.ok) {
+                    alert(res_data.message)
+                } else {
+                    clearInput();
+                    alert("Схема движения добавлена (Обновите страницу, чтобы отредактировать ее)");
+                    editing = -1;
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+        async function updateChart() {
+            if (editing < 0){
+                alert('Схема движения для редактирования не выбрана');
+                return
+            }
+
+            const id = editing;
+            const lats_str = lats.value;
+            const lons_str = lons.value;
+            const title_str = title.value;
+
+            data = {id, title_str, lats_str, lons_str}
+            const jsonData = JSON.stringify(data);
+            console.log(jsonData);
+
+            try {
+                const response = await fetch('/web/charts', {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonData
+                });
+                const res_data = await response.json();
+                console.log(res_data)
+                if (!response.ok) {
+                    alert(res_data.message)
+                } else {
+                    clearInput();
+                    alert("Схема движения обновлена");
+
+                    const rows = document.querySelectorAll('#myTable tr');
+                    let row = null;
+                    for (const r of rows) {
+                        const firstCell = r.cells[0];
+                        if (firstCell && firstCell.textContent == editing) {
+                            row = r;
+                            break;
+                        }
+                    }
+                    row.cells[1].firstChild.nodeValue = title_str;
+                    row.cells[0].querySelector('input').value = lats_str;
+                    row.cells[1].querySelector('input').value = lons_str;
+                    editing = -1;
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    </script>
+</head>
+<body>
+<div class="map-block">
+    <div id="map" style="width: 100%; height: 100%"></div>
+</div>
+<div class="table-container">
+    <h2>Редактор схем движения</h2>
+    <button onclick="window.location.href='/web/profile'">В личный кабинет</button>
+    <br>
+    Отметить остановку: <br>
+    <select id="stop" name="stop">
+        {%for stop in stops %}
+        <option value="{{stop['id']}}">{{stop['name']}}</option>
+        {% endfor %}
+    </select><br>
+    Название участка<br>
+    <input id="title" type="text"><br>
+    Широта промежуточных точек:<br>
+    <input id="lats" type="text" readonly><br>
+    Долгота промежуточных точек:<br>
+    <input id="lons" type="text" readonly><br>
+    <button onclick="clearAll()">Стереть всё</button>
+    <button onclick="clearInput()">Стереть координаты</button>
+    <button onclick="updateChart()">Обновить</button>
+    <button onclick="saveInput()">Сохранить</button>
+    <table id="myTable">
+        <tr>
+            <th>ID</th>
+            <th>Название</th>
+            <th>Действие</th>
+        </tr>
+        {%for chart in charts %}
+        <tr>
+            <td>{{chart['id']}}<input type="hidden" value="{{chart['lats_str']}}"></td>
+            <td>{{chart['label']}}<input type="hidden" value="{{chart['lons_str']}}"></td>
+            <td>
+                <button onclick="editChart(this)">Редактировать</button>
+                <button onclick="delChart(this)">Удалить</button>
+            </td>
+        </tr>
+        {% endfor %}
+
+
+    </table>
+</div>
+<script>
+    const stop_lats = [{%for stop in stops %}{{stop['lat']}},{% endfor %}];
+    const stop_lons = [{%for stop in stops %}{{stop['lon']}},{% endfor %}];
+
+
+    function handleSelectChange(event) {
+        const select = event.target;
+        const selectedIndex = select.selectedIndex;
+        showStop(stop_lats[selectedIndex], stop_lons[selectedIndex])
+    }
+
+    const select = document.getElementById('stop');
+    select.addEventListener('change', handleSelectChange);
+
+
+    const lats = document.getElementById('lats');
+    const lons = document.getElementById('lons');
+    const title = document.getElementById('title');
+</script>
+</body>
+</html>
