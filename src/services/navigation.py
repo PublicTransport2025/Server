@@ -183,7 +183,7 @@ class NavigationService:
                 routes_df.iloc[i, 6] = f'в {int(timetable_start // 60):02}:{int(timetable_start % 60):02}'
                 routes_df.iloc[i, 7] = f'{int(timetable_trip // 60):02}:{int(timetable_trip % 60):02}'
                 routes_df.iloc[i, 8] = int(timetable_full)
-                routes_df.iloc[i, 9] = int(timetable_full - timetable_trip + (1 + 1 * max_load) * timetable_trip)
+                routes_df.iloc[i, 9] = int(timetable_full - timetable_trip + (1 + 0.2 * max_load) * timetable_trip)
             elif vehicles_full:
                 pass
 
@@ -332,7 +332,7 @@ class NavigationService:
 
                 # Оценка времени по графику 2 маршрута
                 timetable_start2, timetable_trip2, timetable_full2 \
-                    = await NavigationService().check_timetables(route2.id, fact_time + real1 + 5, before_time_coef2,
+                    = await NavigationService().check_timetables(route2.id, fact_time + real1 + 1, before_time_coef2,
                                                                  time_coef2,
                                                                  full_time_coef2, session)
                 vehicles_start2, vehicles_trip2, vehicles_full2 = None, None, None
@@ -346,7 +346,7 @@ class NavigationService:
                     double_routes_df.iloc[i, 16] = f'{int(timetable_trip2 // 60):02}:{int(timetable_trip2 % 60):02}'
                     double_routes_df.iloc[i, 18] = int(timetable_full2)
                     double_routes_df.iloc[i, 19] = int(
-                        timetable_full2 - timetable_trip2 + (1 + 1 * max_load2) * timetable_trip2)
+                        timetable_full2 - timetable_trip2 + (1 + 0.2 * max_load2) * timetable_trip2)
                 elif vehicles_full2:
                     pass
 
@@ -381,7 +381,7 @@ class NavigationService:
 
         double_routes_df = double_routes_df[~double_routes_df.apply(should_drop, axis=1)].reset_index(drop=True)
 
-        double_routes_df = double_routes_df.head(5)
+        double_routes_df = double_routes_df.head(15)
 
         double_routes = []
         for i, row_df in double_routes_df.iterrows():
