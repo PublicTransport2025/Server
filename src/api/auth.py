@@ -80,7 +80,8 @@ def refresh(token: str = Header(...), db: Session = db_client):
         user = AuthService().get_user(db, payload["sub"])
     except Exception:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid refresh token")
-
+    if user.rang < 5:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="This account is blocked")
     access, refresh_token, expires_in = create_tokens(payload["sub"])
     return {"access_token": access,
             "refresh_token": refresh_token,
@@ -147,6 +148,9 @@ def reset_password(data: UserResetPass, db: Session = db_client):
     user = db.query(User).filter_by(login=data.email).one_or_none()
     if not user:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Пользователь не найден")
+
+    if user.rang < 5:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="This account is blocked")
 
     record = db.query(EmailCode).filter_by(email=data.email).first()
     if not record:
