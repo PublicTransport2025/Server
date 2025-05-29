@@ -3,7 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <title>[3KA] Кабинет</title>
-    <link href="/static/profile.css" rel="stylesheet" type="text/css">
+    <style>
+        h2{
+            text-align: center;
+            font-family: Georgia, sans-serif;
+            color: #000080;
+            margin: 5px;
+        }
+        body{
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #E8EBFF;
+        }
+        section {
+            display: flex;
+            flex-flow: row wrap;
+            align-items: center;
+            justify-content: center;
+        }
+        .label {
+            font-family: Georgia, sans-serif;
+            font-size: 24px;
+            display: flex;
+            padding: 10px;
+            justify-content: center;
+            align-items: center;
+            margin: 10px;
+            padding: 5px;
+            width: 400px;
+            height: 150px;
+            color: #377E70;
+            border-radius: 24px;
+            background: white;
+        }
+        .logout{
+            display: inline-block; /* Чтобы фон и рамка работали корректно */
+            text-decoration: none; /* Убираем подчеркивание */
+            width: 90%;
+            height: 40px;
+	        margin: auto;
+            border-radius: 15px; /* Уголки */
+            background: #377E70;
+            color: #FFFFFF;
+            padding: 0px 10px;
+            font-family: Georgia, sans-serif;
+            font-size: 24px;
+            margin: 10px;
+            cursor: pointer;
+            border-style: solid;
+            border-color: #377E70;
+        }
+        input {
+	        width: 70%;
+            height: 50px;
+            border-radius: 35px; /* Уголки */
+            border-style: solid;
+            border-color: #377E70;
+            padding: 0px 20px;
+            font-size: 20px;
+            margin: 10px auto;
+        }
+    </style>
     <script>
         async function patchName() {
             const name_input = document.getElementById("name");
@@ -32,41 +92,40 @@
     </script>
 </head>
 <body>
-<h1>Кабинет редактора</h1>
-<h3>Добро пожаловать, {{ name }}</h3>
+<h2>Кабинет редактора</h2>
+<h2>Добро пожаловать, {{ name }}</h2>
 <section>
-    <div class='label'>
-        <h5>Основные действия:</h5>
-        <ul>
-            <li><a href="/web/io">Импорт/ Экспорт базы данных</a></li>
-            <li><a href="/web/admins">Команда редакторов</a></li>
-            <li><a href="/web/logs/5">Действия редакции</a></li>
-            <li><a href="/web/stops">Редактор остановочных пунктов</a></li>
-            <li><a href="/web/atps">Список АТП</a></li>
-            <li><a href="/web/routes">Реестр Маршрутов</a></li>
-            <li><a href="/web/timetables/1">Постоянные графики</a></li>
-            <li><a href="/web/charts">Схемы движения</a></li>
-        </ul>
-        <h5>Мой профиль:</h5>
-        <table width="100%">
-            <tr>
-                <td width="20%" style="text-align:center">
-                    <label for="name">Имя:</label>
-                </td>
-                <td width="80%" style="text-align:center"><input type="text" name="name" id="name" value="{{name}}"/></td>
-            </tr>
-        </table>
-        <table width="100%">
-            <tr>
-                <td width="50%">
-                    <button class="logout" onclick="patchName()">Изменить</button>
-                </td>
-                <td width="50%">
-                    <button class="logout" onclick="window.location.href='/web/profile/logout';">Выйти</button>
-            </tr>
-        </table>
-
-
+    <a class='label' href="/web/io">Импорт/ Экспорт базы данных</a>
+    <a class='label' href="/web/admins">Пользователи сайта</a>
+    <a class='label' href="/web/logs/5">Действия редакции</a>
+    <a class='label' href="/web/stops">Редактор остановочных пунктов</a>
+    <a class='label' href="/web/atps">Список АТП</a>
+    <a class='label' href="/web/routes">Реестр Маршрутов</a>
+    <a class='label' href="/web/timetables/1">Постоянные графики</a>
+    <a class='label' href="/web/charts">Схемы движения</a>
+    <a class='label' href="/web/statistic">Статистика и отзывы</a>
+    <div class="label">
+        <div>
+            <table width="100%">
+                <tr>
+                    <td width="20%" style="text-align:center">
+                        <label for="name">Имя:</label>
+                    </td>
+                    <td width="80%" style="text-align:center"><input type="text" name="name" id="name"
+                                                                     value="{{name}}"/>
+                    </td>
+                </tr>
+            </table>
+            <table width="100%">
+                <tr>
+                    <td width="50%">
+                        <button class="logout" onclick="patchName()">Изменить</button>
+                    </td>
+                    <td width="50%">
+                        <button class="logout" onclick="window.location.href='/web/profile/logout';">Выйти</button>
+                </tr>
+            </table>
+        </div>
     </div>
 </section>
 </body>

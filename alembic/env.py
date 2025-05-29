@@ -7,7 +7,8 @@ from alembic import context
 from src.core.constants import DB_NAME, DB_HOST, DB_PORT, DB_USER, DB_PASS
 from src.core.db import Base
 
-from src.models.users import User, Log
+from src.models.email_codes import EmailCode
+from src.models.users import User, Log, Feedback
 from src.models.logistic import Stop, Tpu, Atp, Route, Section, Chart, Traffic, Timetable
 
 # this is the Alembic Config object, which provides
