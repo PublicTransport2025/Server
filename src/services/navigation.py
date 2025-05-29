@@ -307,7 +307,7 @@ class NavigationService:
 
         for i, row_df in double_routes_df.iterrows():
             route1, home1, end1, long1, load1, time_label1, time_begin1, time_road1, stop1, \
-                route2, home2, end2, long2, load2, time_label2, time_begin2, time_road2, stop2, tt, ll, ww = row_df
+                route2, home2, end2, long2, load2, time_label2, time_begin2, time_road2, stop2, tt, ll, max_load = row_df
 
             time_coef1 = await NavigationService().analize_time(route1.id, home1, end1, session)
             time_coef2 = await NavigationService().analize_time(route2.id, home2, end2, session)
@@ -354,7 +354,7 @@ class NavigationService:
                     double_routes_df.iloc[i, 16] = f'{int(timetable_trip2 // 60):02}:{int(timetable_trip2 % 60):02}'
                     double_routes_df.iloc[i, 18] = int(timetable_full2)
                     double_routes_df.iloc[i, 19] = int(
-                        timetable_full2 - timetable_trip2 + (1 + 0.2 * max_load2) * timetable_trip2)
+                        timetable_full2 - timetable_trip2 + (1 + 0.2 * max_load) * timetable_trip2)
                 elif vehicles_full2:
                     pass
 
