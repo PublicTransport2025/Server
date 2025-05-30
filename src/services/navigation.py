@@ -16,7 +16,7 @@ from src.schemas.navigation import RouteSimple, RouteReport, RouteDouble
 
 class NavigationService:
     @staticmethod
-    async def create_routes(from_id: int, to_id: int, care: bool, change: bool, priority: int, current_time: datetime,
+    async def create_routes(from_id: int, to_id: int, care: bool, change: bool, priority: int, fact_time: int,
                             session: AsyncSession) -> RouteReport:
         """
         Построение всех маршрутах по заданным начальным и конечным остановкам
@@ -25,7 +25,7 @@ class NavigationService:
         :param care: только низкопольный пс?
         :param change: делать ли пересадки?
         :param priority: приоритет: 0 - загруженность, 1 - время, 2 - баланс
-        :param current_time: время отправления от начальной остановки
+        :param fact_time: время отправления от начальной остановки в минутах после полуночи
         :param session: сессия БД
         :return: json-модель маршрута
         """
@@ -53,9 +53,6 @@ class NavigationService:
                     stops_to.append(row[0].id)
             else:
                 stops_to.append(to_id)
-
-            # Перевод времени отправления в минуты
-            fact_time = current_time.hour * 60 + current_time.minute
 
             # Построение беспересадочных маршрутов
             simple_routes, rb = await NavigationService().create_simple_routes(stops_from, stops_to, care, priority,
@@ -203,7 +200,7 @@ class NavigationService:
         routes_df['route_id'] = [routes_df.iloc[i, 0].id for i in range(len(routes_df))]
         # Определение брифа беспересадочных маршрутов
         routes_brief = routes_df.set_index('route_id')['long']
-        routes_df = routes_df.head(3)
+        routes_df = routes_df.head(10)
 
         # Подготовка json-ответа
         simple_routes = []
@@ -386,7 +383,7 @@ class NavigationService:
 
         double_routes_df = double_routes_df[~double_routes_df.apply(should_drop, axis=1)].reset_index(drop=True)
 
-        double_routes_df = double_routes_df.head(3)
+        double_routes_df = double_routes_df.head(4)
 
         double_routes = []
         for i, row_df in double_routes_df.iterrows():
