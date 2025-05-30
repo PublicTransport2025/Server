@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Header, HTTPException, Depends
 
 from src.api.atp import atp_router
-from src.api.navigation import navigation_router
-from src.api.stops import stops_router
 from src.api.auth import auth_router
 from src.api.email_verification import email_router
+from src.api.feedback import feedback_router
+from src.api.navigation import navigation_router
+from src.api.stops import stops_router
 from src.core.constants import API_KEY, VERSION
 
 
@@ -27,7 +28,8 @@ all_routers = [
     navigation_router,
     atp_router,
     auth_router,
-    email_router
+    email_router,
+    feedback_router
 ]
 
 for router in all_routers:

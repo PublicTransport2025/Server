@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,12 +14,14 @@ navigation_router = APIRouter(
 )
 
 
-def get_current_time() -> datetime:
-    return datetime.now()
+def get_current_time() -> int:
+    current_time = datetime.now()
+    return current_time.hour * 60 + current_time.minute
 
 
 @navigation_router.get("/")
-async def create_routes(from_id: int, to_id: int, care: bool, change: bool, priority: int, current_time: datetime = Depends(get_current_time),
+async def create_routes(from_id: int, to_id: int, care: bool, change: bool, priority: int,
+                        time: Optional[int] = None, current_time=Depends(get_current_time),
                         session: AsyncSession = db_async_client) -> RouteReport:
     """
     Обрабатывает запрос на построение маршрута
@@ -27,10 +30,15 @@ async def create_routes(from_id: int, to_id: int, care: bool, change: bool, prio
     :param care: только низкопольный пс?
     :param change: делать ли пересадки?
     :param priority: приоритет: 0 - загруженность, 1 - время, 2 - баланс
+    :param time: время отправления
     :param current_time: текущее время
     :param session: сессия БД
     :return: json-модель маршрута
     """
-    route_report = await NavigationService().create_routes(from_id, to_id, care, change, priority, current_time, session)
-    return route_report
 
+    if time is None:
+        time = current_time
+
+    route_report = await NavigationService().create_routes(from_id, to_id, care, change, priority, time,
+                                                           session)
+    return route_report

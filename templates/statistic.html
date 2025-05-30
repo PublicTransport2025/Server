@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>[3KA] Статистика</title>
+    <link href="/static/datatable.css" rel="stylesheet" type="text/css">
+    <script>
+        async function delFeedback(button) {
+            const row = button.parentNode.parentNode;
+            const id = row.cells[1].querySelector('input').value;
+
+            try {
+                const response = await fetch('/web/statistic/'+id, {
+                    method: 'DELETE',
+                });
+                const res_data = await response.json();
+                console.log(res_data)
+                if (!response.ok) {
+                    alert(res_data.message)
+                } else {
+                    row.parentNode.removeChild(row);
+                    alert("Отзыв удален");
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+        async function banUser(button) {
+            const row = button.parentNode.parentNode;
+            const id = row.cells[2].querySelector('input').value;
+            try {
+                const response = await fetch('/web/admins/ban/'+id, {
+                    method: 'DELETE',
+                });
+                const res_data = await response.json();
+                console.log(res_data)
+                if (!response.ok) {
+                    alert(res_data.message)
+                } else {
+                    alert("Пользователь заблокирован");
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    </script>
+</head>
+<body>
+<h2>Статистика и отзывы</h2>
+<button onclick="window.location.href='/web/profile'"> В личный кабинет</button>
+<br>
+<h2>Средняя оценка: {{avg_mark}}</h2>
+<br>
+
+<table>
+    <tr>
+        <th width="15%">Автор</th>
+        <th width="15%">Почта для ответа</th>
+        <th width="15%">Оценка</th>
+        <th width="40%">Отзыв</th>
+        <th width="15%">Действие</th>
+    </tr>
+    {% for feedback in feedbacks %}
+    <tr>
+        <td><b>{{feedback['name']}}</b><br>{{feedback['created_at']}}</td>
+        <td>{{feedback['email']}} <input type="hidden" value="{{feedback['id']}}"/></td>
+        <td>{{feedback['mark']}} <input type="hidden" value="{{feedback['user_id']}}"/></td>
+        <td>{{feedback['about']}}</td>
+        <td>
+            <button onclick="delFeedback(this)">Удалить</button>
+            <button onclick="banUser(this)">Заблокировать</button>
+        </td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+
+</body>
+</html>
