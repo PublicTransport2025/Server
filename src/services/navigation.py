@@ -162,7 +162,8 @@ class NavigationService:
             route, home, end, long, load, t1, t2, t3, t4, t5 = row_df
 
             # Оценка загруженности
-            max_load, time_coef = await NavigationService().analize_sections(route.id, home, end, session)
+            max_load = await NavigationService().analize_load(route.id, home, end, session)
+            time_coef = await NavigationService().analize_time(route.id, home, end, session)
             routes_df.iloc[i, 4] = max_load
 
             # Оценка времени
@@ -197,11 +198,12 @@ class NavigationService:
 
         # Ограничение поиска
         routes_df.drop_duplicates(subset=['route'], keep='first', inplace=True, ignore_index=True)
-        # routes_df = routes_df.head(5)
+        #
 
         routes_df['route_id'] = [routes_df.iloc[i, 0].id for i in range(len(routes_df))]
         # Определение брифа беспересадочных маршрутов
         routes_brief = routes_df.set_index('route_id')['long']
+        routes_df = routes_df.head(3)
 
         # Подготовка json-ответа
         simple_routes = []
@@ -254,8 +256,6 @@ class NavigationService:
         stop_table = aliased(Stop)
         chart_table = aliased(Chart)
 
-        # 140 943 Брно-73
-
         stmt = (select(s1, s2, stop1, stop2, s3, s4)
                 .join(s2, s1.route_id == s2.route_id)
                 .join(stop1, s2.stop_id == stop1.id)
@@ -291,18 +291,26 @@ class NavigationService:
                  'None', stop_2.name,
                  99999, 9999, 9]
 
+        # Оценка загруженности 1 и 2 маршртуа
         for i, row_df in double_routes_df.iterrows():
             route1, home1, end1, long1, load1, time_label1, time_begin1, time_road1, stop1, \
                 route2, home2, end2, long2, load2, time_label2, time_begin2, time_road2, stop2, tt, ll, ww = row_df
-
-            # Оценка загруженности 1 и 2 маршртуа
-            max_load1, time_coef1 = \
-                await NavigationService().analize_sections(route1.id, home1, end1, session)
+            max_load1 = await NavigationService().analize_load(route1.id, home1, end1, session)
             double_routes_df.iloc[i, 4] = max_load1
-            max_load2, time_coef2 = \
-                await NavigationService().analize_sections(route2.id, home2, end2, session)
+            max_load2 = await NavigationService().analize_load(route2.id, home2, end2, session)
             double_routes_df.iloc[i, 13] = max_load2
             double_routes_df.iloc[i, 20] = max(max_load1, max_load2)
+
+        # Ограничение поиска
+        double_routes_df = double_routes_df.sort_values(by=['max_load', 'load1', 'load2', 'long1', 'long2'])
+        double_routes_df.drop_duplicates(subset=['route1', 'route2'], keep='first', inplace=True, ignore_index=True)
+
+        for i, row_df in double_routes_df.iterrows():
+            route1, home1, end1, long1, load1, time_label1, time_begin1, time_road1, stop1, \
+                route2, home2, end2, long2, load2, time_label2, time_begin2, time_road2, stop2, tt, ll, max_load = row_df
+
+            time_coef1 = await NavigationService().analize_time(route1.id, home1, end1, session)
+            time_coef2 = await NavigationService().analize_time(route2.id, home2, end2, session)
 
             # Оценка времени 1 маршртуа
             full_time_coef1 = await NavigationService().full_time_coeff(route1.id, session)
@@ -346,7 +354,7 @@ class NavigationService:
                     double_routes_df.iloc[i, 16] = f'{int(timetable_trip2 // 60):02}:{int(timetable_trip2 % 60):02}'
                     double_routes_df.iloc[i, 18] = int(timetable_full2)
                     double_routes_df.iloc[i, 19] = int(
-                        timetable_full2 - timetable_trip2 + (1 + 0.2 * max_load2) * timetable_trip2)
+                        timetable_full2 - timetable_trip2 + (1 + 0.2 * max_load) * timetable_trip2)
                 elif vehicles_full2:
                     pass
 
@@ -360,9 +368,6 @@ class NavigationService:
         else:  # По взвешенному времени (баланс)
             double_routes_df = double_routes_df.sort_values(
                 by=['weight_time', 'max_load', 'load1', 'load2', 'long1', 'long2'])
-
-        # Ограничение поиска
-        double_routes_df.drop_duplicates(subset=['route1', 'route2'], keep='first', inplace=True, ignore_index=True)
 
         def should_drop(row):
             key = row['route1'].id
@@ -381,7 +386,7 @@ class NavigationService:
 
         double_routes_df = double_routes_df[~double_routes_df.apply(should_drop, axis=1)].reset_index(drop=True)
 
-        double_routes_df = double_routes_df.head(15)
+        double_routes_df = double_routes_df.head(3)
 
         double_routes = []
         for i, row_df in double_routes_df.iterrows():
@@ -427,7 +432,7 @@ class NavigationService:
         return double_routes
 
     @staticmethod
-    async def analize_sections(route_id: int, home: int, end: int, session: AsyncSession) -> Tuple[int, float]:
+    async def analize_load(route_id: int, home: int, end: int, session: AsyncSession) -> int:
         """
         Вычисление загруженности промежутка маршрута
         :param route_id: айди маршрута
@@ -436,15 +441,29 @@ class NavigationService:
         :param session: сессия БД
         :return:
         """
-        stmt = select(
-            func.max(Section.load).label('max_load'),
-            func.sum(Section.coef).label('time_coef'),
-        ).where(Section.route_id == route_id, Section.order >= home, Section.order < end)
+        stmt = select(func.max(Section.load).label('max_load')
+                      ).where(Section.route_id == route_id, Section.order >= home, Section.order < end)
         result = await session.execute(stmt)
         values = result.one()
         max_load = values[0]
-        time_coef = values[1]
-        return max_load, time_coef
+        return max_load
+
+    @staticmethod
+    async def analize_time(route_id: int, home: int, end: int, session: AsyncSession) -> float:
+        """
+        Вычисление загруженности времени маршрута
+        :param route_id: айди маршрута
+        :param home: первая остановка по ходу маршрута
+        :param end: последння остановка по ходу маршрута
+        :param session: сессия БД
+        :return:
+        """
+        stmt = select(func.sum(Section.coef).label('time_coef')
+                      ).where(Section.route_id == route_id, Section.order >= home, Section.order < end)
+        result = await session.execute(stmt)
+        values = result.one()
+        time_coef = values[0]
+        return time_coef
 
     @staticmethod
     async def full_time_coeff(route_id: int, session: AsyncSession) -> float:
