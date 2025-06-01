@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from src.web.admins import admins_router
 from src.web.atps import atps_router
 from src.web.charts import charts_router
+from src.web.events import events_router
 from src.web.io import io_router
 from src.web.logs import logs_router
 from src.web.profile import profile_router
@@ -23,7 +24,8 @@ all_routers = [
     logs_router,
     admins_router,
     charts_router,
-    statistic_router
+    statistic_router,
+    events_router
 ]
 
 for router in all_routers:

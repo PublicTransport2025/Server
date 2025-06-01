@@ -23,16 +23,13 @@ def send_verification_code(email: EmailStr, db: Session = db_client):
     :param db: сессия базы данных
     :return: сообщение об успешной отправке
     """
+    user = db.query(User).filter_by(login=email).one_or_none()
+    if user:
+        raise HTTPException(400, detail="Такой email уже зарегестрирован")
+    existing = db.query(EmailCode).filter_by(email=email).first()
+    if existing and datetime.utcnow() - existing.created_at < timedelta(minutes=5):
+        raise HTTPException(419, detail="Код был отправлен ранее. Запросить новый можно через 5 минут")
     try:
-        user = db.query(User).filter_by(login=email).one_or_none()
-        if user:
-            raise HTTPException(400, detail="Такой email уже зарегестрирован")
-
-        existing = db.query(EmailCode).filter_by(email=email).first()
-
-        if existing and datetime.utcnow() - existing.created_at < timedelta(minutes=5):
-            raise HTTPException(419, detail="Код был отправлен ранее. Запросить новый можно через 5 минут")
-
         code = generate_code()
         subject = "Подтверждение почты"
         body = f"Ваш код подтверждения: {code}"
@@ -63,16 +60,13 @@ def send_verification_code(email: EmailStr, db: Session = db_client):
     :param db: сессия базы данных
     :return: сообщение об успешной отправке
     """
+    user = db.query(User).filter_by(login=email).one_or_none()
+    if not user:
+        raise HTTPException(400, detail="Такой email не был зарегестрирован")
+    existing = db.query(EmailCode).filter_by(email=email).first()
+    if existing and datetime.utcnow() - existing.created_at < timedelta(minutes=5):
+        raise HTTPException(419, detail="Код был отправлен ранее. Запросить новый можно через 5 минут")
     try:
-        user = db.query(User).filter_by(login=email).one_or_none()
-        if not user:
-            raise HTTPException(400, detail="Такой email не был зарегестрирован")
-
-        existing = db.query(EmailCode).filter_by(email=email).first()
-
-        if existing and datetime.utcnow() - existing.created_at < timedelta(minutes=5):
-            raise HTTPException(419, detail="Код был отправлен ранее. Запросить новый можно через 5 минут")
-
         code = generate_code()
         subject = "Подтверждение почты"
         body = f"Ваш код подтверждения: {code}"
@@ -92,7 +86,6 @@ def send_verification_code(email: EmailStr, db: Session = db_client):
         msg = '\n'.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
         logging.error(msg)
         raise HTTPException(500, str(exc))
-
 
 
 @email_router.post("/verify")
