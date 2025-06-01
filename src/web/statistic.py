@@ -23,6 +23,8 @@ async def show_feedbacks(request: Request, db_session: Session = db_client):
         return RedirectResponse("/web/profile/login")
 
     feedbacks, avg_mark = StatisticService().show_feedbacks(db_session)
+    if avg_mark is None:
+        avg_mark = 0
     return templates.TemplateResponse("statistic.html",
                                       {"request": request, "feedbacks": feedbacks, "avg_mark": f"{avg_mark:.2f}"})
 

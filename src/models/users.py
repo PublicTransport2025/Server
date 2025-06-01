@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import List
 
-from sqlalchemy import Column, UUID, String, Integer, Text, DateTime, ForeignKey, Boolean
+from sqlalchemy import Column, UUID, String, Integer, Text, DateTime, ForeignKey, Boolean, Float
 from sqlalchemy.orm import Mapped, relationship
 
 from src.core.db import Base
@@ -26,6 +26,7 @@ class User(Base):
     rang: int = Column(Integer, nullable=False, default=5)
     logs: Mapped[List["Log"]] = relationship(back_populates="user_log")
     feedbacks: Mapped[List["Feedback"]] = relationship(back_populates="user_feedback")
+    events: Mapped[List["Event"]] = relationship(back_populates="user_event")
 
 
 class Log(Base):
@@ -56,3 +57,20 @@ class Feedback(Base):
 
     user_id: Mapped[UUID] = Column(ForeignKey("users.id", ondelete="SET NULL"), nullable=False)
     user_feedback: Mapped["User"] = relationship(back_populates="feedbacks")
+
+
+class Event(Base):
+    __tablename__ = "events"
+
+    id: UUID = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    type: float = Column(Integer, nullable=False)
+    line: float = Column(Integer, nullable=False)
+    lat: float = Column(Float, nullable=False)
+    lon: float = Column(Float, nullable=False)
+
+    moderated: bool = Column(Integer, default=0)
+    created_at: datetime = Column(DateTime, default=datetime.now)
+
+    user_id: Mapped[UUID] = Column(ForeignKey("users.id", ondelete="SET NULL"), nullable=False)
+    user_event: Mapped["User"] = relationship(back_populates="events")

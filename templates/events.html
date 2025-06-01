@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>[3KA] Дорожные события</title>
+    <link href="/static/datatable.css" rel="stylesheet" type="text/css">
+    <style>
+        .map-block {
+            height: 50vh; /* Занимает половину высоты экрана */
+            background-color: white;
+        }
+        .table-container {
+            height: 50vh; /* Занимает оставшуюся половину высоты экрана */
+            overflow-y: auto; /* Вертикальная прокрутка */
+            text-align: center;
+        }
+    </style>
+    <script src="https://api-maps.yandex.ru/v3/?apikey={{map_key}}&lang=ru_RU"></script>
+    <script>
+        let map;
+        let ff;
+        let names;
+
+        let lat_new;
+        let lon_new;
+
+        initMap();
+
+
+        async function initMap() {
+            await ymaps3.ready;
+
+            const {YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer, YMapMarker, YMapListener} = ymaps3;
+
+            map = new YMap(document.getElementById('map'), {location: {center: [39.2, 51.68], zoom: 12}});
+
+            map.addChild(new YMapDefaultSchemeLayer());
+            ff = new YMapDefaultFeaturesLayer();
+            names = new YMapDefaultFeaturesLayer();
+            map.addChild(ff);
+
+            const clickCallback = (object, event) => {
+                const coords = event.coordinates;
+                addNewIcon(coords[0], coords[1]);
+                lat_new = coords[0];
+                lon_new = coords[1];
+            };
+
+            const mapListener = new YMapListener({
+                layer: 'any',
+                onClick: clickCallback,
+            });
+
+            map.addChild(mapListener);
+        }
+
+        function moveToCoordinates(button) {
+            const {YMapMarker, YMapDefaultFeaturesLayer} = ymaps3;
+            map.removeChild(ff);
+            ff = new YMapDefaultFeaturesLayer();
+            map.addChild(ff);
+
+            const row = button.parentNode.parentNode;
+            const lat = row.cells[4].querySelector('input').value;
+            const lon = row.cells[3].querySelector('input').value;
+
+            map.setLocation({
+                center: [lat, lon],
+                zoom: 18
+            });
+
+            const content = document.createElement('section');
+            const image = document.createElement('img');
+            image.src = '/static/stop.png';
+            content.appendChild(image);
+            const marker = new YMapMarker({coordinates: [lat, lon], draggable: false}, content);
+            map.addChild(marker);
+        }
+
+
+        function addNewIcon(lat, lon) {
+            const {YMapMarker, YMapDefaultFeaturesLayer} = ymaps3;
+
+            const content = document.createElement('section');
+            const image = document.createElement('img');
+            image.src = '/static/stop_new.png';
+            content.appendChild(image);
+            const marker = new YMapMarker({coordinates: [lat, lon], draggable: false}, content);
+            map.addChild(marker);
+        }
+
+
+        function writeNew(button) {
+            const row = button.parentNode.parentNode;
+            row.cells[4].querySelector('input').value = lat_new;
+            row.cells[3].querySelector('input').value = lon_new;
+            moveToCoordinates(button);
+        }
+
+
+        async function updateStop(button) {
+            const row = button.parentNode.parentNode;
+            const id = row.cells[0].querySelector('input').value;
+            const type = row.cells[1].querySelector('select').value;
+            const line = row.cells[2].querySelector('select').value;
+            const lat = row.cells[3].querySelector('input').value;
+            const lon = row.cells[4].querySelector('input').value;
+            const moderated = row.cells[5].querySelector('select').value;
+
+            data = {id, type, line, lat, lon, moderated}
+            const jsonData = JSON.stringify(data);
+            console.log(jsonData);
+
+            try {
+                const response = await fetch('/web/events', {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonData
+                });
+                const res_data = await response.json();
+                console.log(res_data)
+                if (!response.ok) {
+                    alert(res_data.message)
+                } else {
+                    alert("Дорожное событие отредактировано");
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+
+        async function insertStop(button) {
+            const row = button.parentNode.parentNode;
+            const type = row.cells[1].querySelector('select').value;
+            const line = row.cells[2].querySelector('select').value;
+            const lat = row.cells[3].querySelector('input').value;
+            const lon = row.cells[4].querySelector('input').value;
+            const moderated = row.cells[5].querySelector('select').value;
+
+            data = {type, line, lat, lon, moderated}
+            const jsonData = JSON.stringify(data);
+            console.log(jsonData);
+
+            try {
+                const response = await fetch('/web/events', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonData
+                });
+                const res_data = await response.json();
+                console.log(res_data)
+                if (!response.ok) {
+                    alert(res_data.message)
+                } else {
+                    row.cells[3].querySelector('input').value = "";
+                    row.cells[4].querySelector('input').value = "";
+
+                    const newRow = row.cloneNode(true);
+
+                    newRow.cells[0].textContent = "Ваше";
+                    newRow.cells[1].querySelector('select').value = res_data.type;
+                    newRow.cells[2].querySelector('select').value = res_data.line;
+                    newRow.cells[3].querySelector('input').value = res_data.lat;
+                    newRow.cells[4].querySelector('input').value = res_data.lon;
+                    newRow.cells[5].querySelector('select').checked = res_data.moderated;
+                    row.parentNode.insertBefore(newRow, row.nextSibling);
+                    alert("Дорожное событие добавлено");
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+        async function deleteStop(button) {
+            const row = button.parentNode.parentNode;
+            const id = row.cells[0].querySelector('input').value;
+
+            try {
+                const response = await fetch('/web/events/'+id, {
+                    method: 'DELETE',
+                });
+                const res_data = await response.json();
+                console.log(res_data)
+                if (!response.ok) {
+                    alert(res_data.message)
+                } else {
+                    row.parentNode.removeChild(row);
+                    alert("Дорожное событие удалено");
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    </script>
+</head>
+<body>
+<div class="map-block">
+    <div id="map" style="width: 100%; height: 100%"></div>
+</div>
+<div class="table-container">
+    <h2>Редактор дорожных событий</h2>
+    <button onclick="window.location.href='/web/profile'"> В личный кабинет</button>
+    <table id="stops_table">
+        <tr>
+            <th>Пользователь</th>
+            <th>Тип события</th>
+            <th>Полоса движения</th>
+            <th>Широта</th>
+            <th>Долгота</th>
+            <th>Оценка</th>
+            <th>Время создания</th>
+            <th>Действие</th>
+        </tr>
+        <tr>
+            <td>NEW</td>
+            <td><select name="chart">
+                {%for i in range(types | length) %}
+                <option value="{{i}}">{{types[i]}}</option>
+                {% endfor %}
+            </select></td>
+            <td><select name="chart">
+                {%for i in range(lines | length) %}
+                <option value="{{i}}">{{lines[i]}}</option>
+                {% endfor %}
+            </select></td>
+            <td><input type="number" name="lat"></td>
+            <td><input type="number" name="lon"></td>
+            <td><select name="chart">
+                {%for i in range(marks | length) %}
+                <option value="{{i}}">{{marks[i]}}</option>
+                {% endfor %}
+            </select></td>
+            <td>Сейчас</td>
+            <td>
+                <button onclick="moveToCoordinates(this)">Показать</button>
+                <button onclick="writeNew(this)">Записать</button>
+                <button onclick="insertStop(this)">Добавить</button>
+        </tr>
+        {% for event in events %}
+        <tr>
+            <td><input type="hidden" value="{{event['id']}}">{{event.user_event.name}}<br>{{event.user_event.login}}<br>{{event.user_event.vkid}}
+            </td>
+            <td><select name="chart">
+                {%for i in range(types | length) %}
+                {%if i == event['type'] %}
+                <option value="{{i}}" selected='selected'>{{types[i]}}</option>
+                {% else %}
+                <option value="{{i}}">{{types[i]}}</option>
+                {% endif %}
+                {% endfor %}
+            </select></td>
+            <td><select name="chart">
+                {%for i in range(lines | length) %}
+                {%if i == event['line'] %}
+                <option value="{{i}}" selected='selected'>{{lines[i]}}</option>
+                {% else %}
+                <option value="{{i}}">{{lines[i]}}</option>
+                {% endif %}
+                {% endfor %}
+            </select></td>
+            <td><input type="number" name="lat" value="{{event['lat']}}"></td>
+            <td><input type="number" name="lon" value="{{event['lon']}}"></td>
+            <td><select name="chart">
+                {%for i in range(marks | length) %}
+                {%if i == event['moderated'] %}
+                <option value="{{i}}" selected='selected'>{{marks[i]}}</option>
+                {% else %}
+                <option value="{{i}}">{{marks[i]}}</option>
+                {% endif %}
+                {% endfor %}
+            </select></td>
+            <td>{{event['created_at']}}</td>
+            <td>
+                <button onclick="moveToCoordinates(this)">Показать</button>
+                <button onclick="writeNew(this)">Записать</button>
+                <button onclick="updateStop(this)">Обновить</button>
+                <button onclick="deleteStop(this)">Удалить</button>
+        </tr>
+        {% endfor %}
+
+    </table>
+</div>
+
+</body>
+</html>
