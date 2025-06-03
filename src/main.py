@@ -11,6 +11,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from src.api import api_router
 from src.core.constants import LOCALHOST_IP, PORT
+from src.facecodd.facecodd import codd_router
 from src.web import web_router
 
 localhost_ip = LOCALHOST_IP
@@ -32,6 +33,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 app.add_middleware(SessionMiddleware, secret_key=secret_key)
 app.include_router(api_router)
 app.include_router(web_router)
+app.include_router(codd_router)
 
 logging.basicConfig(
     filename='errors.log',

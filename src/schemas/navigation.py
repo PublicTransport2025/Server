@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -8,6 +8,8 @@ from src.schemas.coord import Coord
 class RouteSimple(BaseModel):
     label: str
     number: str
+    route_id: int
+    info: Optional[str]
     load: int
     time_label: str
     time_begin: str
@@ -24,6 +26,8 @@ class RouteDouble(BaseModel):
     time_road1: str
     stop1: str
     stops1: List[Coord]
+    route_id1: int
+    info1: Optional[str]
 
     label2: str
     number2: str
@@ -33,7 +37,8 @@ class RouteDouble(BaseModel):
     time_road2: str
     stop2: str
     stops2: List[Coord]
-
+    route_id2: int
+    info2: Optional[str]
 
 
 class RouteReport(BaseModel):
