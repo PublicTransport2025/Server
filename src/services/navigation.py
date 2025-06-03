@@ -1,6 +1,5 @@
 import logging
 import traceback
-from datetime import datetime
 from typing import List, Tuple, Dict
 
 import pandas as pd
@@ -221,8 +220,8 @@ class NavigationService:
                     for i in range(min(len(chart.lats), len(chart.lons))):
                         stops.append(Coord(lat=chart.lats[i], lon=chart.lons[i]))
             simple_routes.append(
-                RouteSimple(label=route.label, number=route.number, load=load, stops=stops,
-                            time_label=time_label, time_begin=time_begin, time_road=time_road))
+                RouteSimple(route_id=route.id, info=route.info, label=route.label, number=route.number, load=load,
+                            stops=stops, time_label=time_label, time_begin=time_begin, time_road=time_road))
             # route = await session.get(Route, section.route_id)
             # routes.append(route)
         return simple_routes, routes_brief
@@ -421,8 +420,10 @@ class NavigationService:
                         stops2.append(Coord(lat=chart.lats[i], lon=chart.lons[i]))
 
             double_routes.append(
-                RouteDouble(label1=route1.label, number1=route1.number, load1=load1, stops1=stops1, stop1=stop1,
+                RouteDouble(route_id1=route1.id, info1=route1.info,
+                            label1=route1.label, number1=route1.number, load1=load1, stops1=stops1, stop1=stop1,
                             time_label1=time_label1, time_begin1=time_begin1, time_road1=time_road1,
+                            route_id2=route2.id, info2=route2.info,
                             label2=route2.label, number2=route2.number, load2=load2, stops2=stops2, stop2=stop2,
                             time_label2=time_label2, time_begin2=time_begin2, time_road2=time_road2
                             ))

@@ -25,7 +25,7 @@ async def show_events(request: Request, db_session: Session = db_client):
     if not request.session.keys().__contains__('id') or request.session['rang'] < 50:
         return RedirectResponse("/web/profile/login")
 
-    types = ["ДТП", "Дорожные работы", "Перекрытие движения"]
+    types = ["ДТП", "Дорожные работы", "Перекрытие движения", "Затор", "Неблагоприятные погодные условия", "Опасность на дороге"]
     lines = ["1 (в т.ч. выделенка)", "2", "3", "4", "все"]
     marks = ["модерация", "пользовательское", "отклонено", "отозвано", "официальное", "разрешено"]
 

@@ -173,3 +173,30 @@ def reset_password(data: UserResetPass, db: Session = db_client):
             "name": user.name,
             "email": bool(user.login),
             "vk": bool(user.vkid)}
+
+
+@auth_router.patch("/name", response_model=Token)
+def signup(name: str, token: str = Header(...), db: Session = db_client):
+    """
+    Обновление имени пользователя
+
+    :param name: новое имя пользователя
+    :paran token: авторизационный токен
+    :param db: сессия базы данных
+    :return: access и refresh токены, а также время жизни access токена
+    """
+    payload = decode_token(token)
+    user_id = payload["sub"]
+
+    user = db.query(User).filter_by(id=user_id).one()
+    user.name = name
+    db.commit()
+    db.refresh(user)
+    access, refresh_token, expires_in = create_tokens(str(user.id))
+    return {"access_token": access,
+            "refresh_token": refresh_token,
+            "expires_in": expires_in,
+            "login": user.login,
+            "name": user.name,
+            "email": bool(user.login),
+            "vk": bool(user.vkid)}
