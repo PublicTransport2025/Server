@@ -7,6 +7,7 @@ from src.api.events import events_router
 from src.api.feedback import feedback_router
 from src.api.navigation import navigation_router
 from src.api.stops import stops_router
+from src.api.model_predict import predict_router
 from src.core.constants import API_KEY, VERSION
 
 
@@ -31,6 +32,7 @@ all_routers = [
     auth_router,
     email_router,
     feedback_router,
+    predict_router,
     events_router
 ]
 

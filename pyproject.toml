@@ -26,6 +26,9 @@ fastapi-mail = "1.2.5"
 passlib = {extras = ["bcrypt"], version = "1.7.4"}  
 python-jose = {extras = ["cryptography"], version = "3.4.0"}
 PyJWT = "2.10.1" 
+joblib = "^1.4.2"
+xgboost = "^3.0.0"
+category_encoders = "^2.8.0"
 
 
 [build-system]
