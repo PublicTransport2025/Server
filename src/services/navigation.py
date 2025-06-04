@@ -1,3 +1,4 @@
+import datetime
 import logging
 import traceback
 from typing import List, Tuple, Dict
@@ -8,9 +9,11 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
+from src.api.model_predict import predict_passenger_count
 from src.models.logistic import Section, Route, Stop, Tpu, Chart, Timetable
 from src.schemas.coord import Coord
 from src.schemas.navigation import RouteSimple, RouteReport, RouteDouble
+from src.schemas.prediction import PredictionInput
 
 
 class NavigationService:
@@ -139,7 +142,7 @@ class NavigationService:
         routes_df = pd.DataFrame(
             {'route': [], 'home': [], 'end': [], 'long': [], 'load': [], 'time_label': [], 'time_begin': [],
              'time_road': [],
-             'full_time': [], 'weight_time': []})
+             'full_time': [], 'weight_time': [], 'stop_id': []})
 
         # Выбор маршрутов из БД
         for row in results:
@@ -151,14 +154,28 @@ class NavigationService:
                 continue
             routes_df.loc[len(routes_df)] = [route, section1.order, section2.order, section2.order - section1.order, 9,
                                              'Нет отправлений', '-', '-',
-                                             9999, 9999]
+                                             9999, 9999, section1.stop_id]
+
+        days_ru = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']
+        today = datetime.date.today()
+        weekday_num = today.weekday()
+        weekday_ru = days_ru[weekday_num]
 
         # Уточнение маршрутов
         for i, row_df in routes_df.iterrows():
-            route, home, end, long, load, t1, t2, t3, t4, t5 = row_df
+            route, home, end, long, load, t1, t2, t3, t4, t5, stop1 = row_df
 
             # Оценка загруженности
-            max_load = await NavigationService().analize_load(route.id, home, end, session)
+            try:
+                pi = PredictionInput(route_id=route.id,
+                                     order=home,
+                                     stop_id=stop1,
+                                     time=f'{int(fact_time // 60):02}:{int(fact_time % 60):02}:00',
+                                     day_of_week=weekday_ru)
+                predict = predict_passenger_count(pi)
+                max_load = min(predict['load_level_0_5'] + 1, 5)
+            except:
+                max_load = await NavigationService().analize_load(route.id, home, end, session)
             time_coef = await NavigationService().analize_time(route.id, home, end, session)
             routes_df.iloc[i, 4] = max_load
 
@@ -199,12 +216,12 @@ class NavigationService:
         routes_df['route_id'] = [routes_df.iloc[i, 0].id for i in range(len(routes_df))]
         # Определение брифа беспересадочных маршрутов
         routes_brief = routes_df.set_index('route_id')['long']
-        routes_df = routes_df.head(10)
+        # routes_df = routes_df.head(10)
 
         # Подготовка json-ответа
         simple_routes = []
         for _, row_df in routes_df.iterrows():
-            route, home, end, long, load, time_label, time_begin, time_road, t4, t5, rid = row_df
+            route, home, end, long, load, time_label, time_begin, time_road, t4, t5, stop1, rid = row_df
             stmt = (select(s1, stop_table, chart_table)
                     .join(stop_table, stop_table.id == s1.stop_id)
                     .join(chart_table, chart_table.id == s1.chart_id, isouter=True)
@@ -270,7 +287,7 @@ class NavigationService:
              'time_label1': [], 'time_begin1': [], 'time_road1': [], 'stop1': [],
              'route2': [], 'home2': [], 'end2': [], 'long2': [], 'load2': [],
              'time_label2': [], 'time_begin2': [], 'time_road2': [], 'stop2': [],
-             'full_time': [], 'weight_time': [], 'max_load': []})
+             'full_time': [], 'weight_time': [], 'max_load': [], 'start1': [], 'start2': []})
 
         for row in results:
             section1, section2, stop_1, stop_2, section3, section4 = row
@@ -285,25 +302,60 @@ class NavigationService:
                  'None', stop_1.name,
                  route2, section3.order, section4.order, section4.order - section3.order, 9, 'Нет отправлений', 'None',
                  'None', stop_2.name,
-                 99999, 9999, 9]
-
-        # Оценка загруженности 1 и 2 маршртуа
-        for i, row_df in double_routes_df.iterrows():
-            route1, home1, end1, long1, load1, time_label1, time_begin1, time_road1, stop1, \
-                route2, home2, end2, long2, load2, time_label2, time_begin2, time_road2, stop2, tt, ll, ww = row_df
-            max_load1 = await NavigationService().analize_load(route1.id, home1, end1, session)
-            double_routes_df.iloc[i, 4] = max_load1
-            max_load2 = await NavigationService().analize_load(route2.id, home2, end2, session)
-            double_routes_df.iloc[i, 13] = max_load2
-            double_routes_df.iloc[i, 20] = max(max_load1, max_load2)
+                 99999, 9999, 9, section1.stop_id, section3.stop_id]
 
         # Ограничение поиска
-        double_routes_df = double_routes_df.sort_values(by=['max_load', 'load1', 'load2', 'long1', 'long2'])
+        double_routes_df = double_routes_df.sort_values(by=['long1', 'long2'])
         double_routes_df.drop_duplicates(subset=['route1', 'route2'], keep='first', inplace=True, ignore_index=True)
+        routes_cache = {}  # Кэш оценки загруженности маршрутов: {(route_id, stop_id): load}
+
+        # Оценка загруженности 1 и 2 маршртуа
+        days_ru = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']
+        today = datetime.date.today()
+        weekday_num = today.weekday()
+        weekday_ru = days_ru[weekday_num]
+        for i, row_df in double_routes_df.iterrows():
+            route1, home1, end1, long1, load1, time_label1, time_begin1, time_road1, stop1, \
+                route2, home2, end2, long2, load2, time_label2, time_begin2, time_road2, stop2, tt, ll, ww, \
+                stop_id1, stop_id2 = row_df
+            if (route1.id, stop_id1) in routes_cache.keys():
+                max_load1 = routes_cache[(route1.id, stop_id1)]
+            else:
+                try:
+                    pi = PredictionInput(route_id=route1.id,
+                                         order=home1,
+                                         stop_id=stop_id1,
+                                         time=f'{int(fact_time // 60):02}:{int(fact_time % 60):02}:00',
+                                         day_of_week=weekday_ru)
+                    predict = predict_passenger_count(pi)
+                    max_load1 = min(predict['load_level_0_5'] + 1, 5)
+                except:
+                    max_load1 = await NavigationService().analize_load(route1.id, home1, end1, session)
+                routes_cache[(route1.id, stop_id1)] = max_load1
+            double_routes_df.iloc[i, 4] = max_load1
+
+            if (route2.id, stop_id2) in routes_cache.keys():
+                max_load2 = routes_cache[(route2.id, stop_id2)]
+            else:
+                try:
+                    pi = PredictionInput(route_id=route2.id,
+                                         order=home2,
+                                         stop_id=stop_id2,
+                                         time=f'{int(fact_time // 60):02}:{int(fact_time % 60):02}:00',
+                                         day_of_week=weekday_ru)
+                    predict = predict_passenger_count(pi)
+                    max_load2 = min(predict['load_level_0_5'] + 1, 5)
+                except:
+                    max_load2 = await NavigationService().analize_load(route2.id, home2, end2, session)
+                routes_cache[(route2.id, stop_id2)] = max_load2
+            double_routes_df.iloc[i, 13] = max_load2
+
+            double_routes_df.iloc[i, 20] = max(max_load1, max_load2)
 
         for i, row_df in double_routes_df.iterrows():
             route1, home1, end1, long1, load1, time_label1, time_begin1, time_road1, stop1, \
-                route2, home2, end2, long2, load2, time_label2, time_begin2, time_road2, stop2, tt, ll, max_load = row_df
+                route2, home2, end2, long2, load2, time_label2, time_begin2, time_road2, stop2, tt, ll, max_load, \
+                stop_id1, stop_id2 = row_df
 
             time_coef1 = await NavigationService().analize_time(route1.id, home1, end1, session)
             time_coef2 = await NavigationService().analize_time(route2.id, home2, end2, session)
@@ -387,7 +439,8 @@ class NavigationService:
         double_routes = []
         for i, row_df in double_routes_df.iterrows():
             route1, home1, end1, long1, load1, time_label1, time_begin1, time_road1, stop1, \
-                route2, home2, end2, long2, load2, time_label2, time_begin2, time_road2, stop2, tt, ll, ww = row_df
+                route2, home2, end2, long2, load2, time_label2, time_begin2, time_road2, stop2, tt, ll, ww, \
+                stop_id1, stop_id2 = row_df
 
             stmt = (select(s1, stop_table, chart_table)
                     .join(stop_table, stop_table.id == s1.stop_id)
